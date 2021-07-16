@@ -114,51 +114,97 @@
 			return !el.classList.contains('selectedEl');
 		});
 		Tools.targets = targets;
-		if (targets.length > 0 && moveable === null) {
-			panel.classList.remove('hide');
-			const horizontal = targets[0].getAttribute('x2') - targets[0].getAttribute('x1') < 5;
-			const vertical = targets[0].getAttribute('y2') - targets[0].getAttribute('y1') < 5;
-			var single = targets.length === 1;
-			var padding = single ? 10 : 0;
-			targets.map(function (el) {
-				setTransformOrigin(el);
-			});
-			moveable = new Moveable(Tools.board, {
-				target: targets,
-				renderDirections: ["nw", "ne", "se", "sw"],
-				defaultGroupOrigin: "50% 50%",
-				container: Tools.board,
-				dragArea: true,
-				draggable: true,
-				pinchable: single,
-				scalable: true,
-				rotatable: single,
-				origin: true,
-				keepRatio: true,
-				pinchThreshold: 20,
-				throttleRotate: 1,
-				throttleDrag: 1,
-				startDragRotate: 0,
-				throttleDragRotate: 1,
-				throttleScale: 0.01,
-				padding: {"left": padding, "top": padding, "right": padding, "bottom": padding},
-			});
-			if (single && targets[0].tagName === 'line' && (vertical || horizontal)) {
-				moveable.dragArea = false;
-			}
-			moveable.on('dragGroupStart', groupTransformStart)
-					.on('dragGroup', groupTransform)
-					.on('dragStart', singleTransformStart)
-					.on('pinchStart', singleTransformStart)
-					.on('scaleStart', singleTransformStart)
-					.on('scaleGroupStart', groupTransformStart)
-					.on('rotateStart', singleTransformStart)
-					.on('drag', singleTransform)
-					.on('pinch', singleTransform)
-					.on('scale', singleTransform)
-					.on('scaleGroup', groupTransform)
-					.on('rotate', singleTransform);
-			moveable.updateRect();
+        if (targets.length > 0 && moveable === null) {
+            panel.classList.remove('hide');
+            const horizontal = targets[0].getAttribute('x2') - targets[0].getAttribute('x1') < 5;
+            const vertical = targets[0].getAttribute('y2') - targets[0].getAttribute('y1') < 5;
+            var single = targets.length === 1;
+            var padding = single ? 10 : 0;
+            targets.map(function (el) {
+                setTransformOrigin(el);
+            });
+            moveable = new Moveable(Tools.board, {
+                target: targets,
+                renderDirections: ["nw", "ne", "se", "sw"],
+                defaultGroupOrigin: "50% 50%",
+                container: Tools.board,
+                dragArea: true,
+                draggable: true,
+                pinchable: single,
+                scalable: true,
+                rotatable: single,
+                origin: true,
+                keepRatio: true,
+                pinchThreshold: 20,
+                throttleRotate: 1,
+                throttleDrag: 1,
+                startDragRotate: 0,
+                throttleDragRotate: 1,
+                throttleScale: 0.01,
+                padding: {"left": padding, "top": padding, "right": padding, "bottom": padding},
+            });
+            if (single && targets[0].tagName === 'line' && (vertical || horizontal)) {
+                moveable.dragArea = false;
+            }
+            const frames = targets.map(() => ({
+                translate: [0, 0],
+                scale: [1, 1],
+            }));
+            moveable.on('dragGroupStart', groupTransformStart)
+                .on('dragGroup', groupTransform)
+                .on('dragStart', singleTransformStart)
+                .on('pinchStart', singleTransformStart)
+                .on('scaleStart', singleTransformStart)
+                .on('scaleGroupStart', function ({ events }) {
+                    const messageForSend = { type: 'array', events: [] };
+                    events.forEach((ev, i) => {
+                        const frame = frames[i];
+                        if (ev.target.style.transform) {
+                            return
+                        } else {
+                            ev.set(frame.scale);
+                            // If a drag event has already occurred, there is no dragStart.
+                            ev.dragStart && ev.dragStart.set(frame.translate);
+                        }
+
+                        let msg = {
+                            type: 'update',
+                            id: ev.target.id,
+                            transform: ev.target.style.transform,
+                            transformOrigin: ev.target.style.transformOrigin
+                        };
+                        messageForSend.events.push(msg);
+                    });
+                    Tools.addActionToHistory(messageForSend);
+                })
+                .on('rotateStart', singleTransformStart)
+                .on('drag', singleTransform)
+                .on('pinch', singleTransform)
+                .on('scale', singleTransform)
+                .on('scaleGroup', ({ events }) => {
+                    const messageForSend = { type: 'array', events: [] };
+                    let sendOrDraw = draw;
+                    if (performance.now() - lastSend > 50) {
+                        lastSend = performance.now();
+                        sendOrDraw = Tools.drawAndSend;
+                    }
+
+                    events.forEach(({ target, scale, drag }, i) => {
+                        const frame = frames[i];
+                        frame.translate = drag.beforeTranslate;
+                        target.style.transform = drag.transform;
+                        let msg = {
+                            type: "update",
+                            id: target.id,
+                            transform: target.style.transform,
+                            transformOrigin: target.style.transformOrigin
+                        };
+                        messageForSend.events.push(msg);
+                    });
+                    sendOrDraw(messageForSend);
+                })
+                .on('rotate', singleTransform)
+            moveable.updateRect();
 		}
 	}
 
@@ -202,6 +248,7 @@
 				transform: ev.target.style.transform,
 				transformOrigin: ev.target.style.transformOrigin
 			};
+            console.log("skizb")
 			messageForSend.events.push(msg);
 		}
 		Tools.addActionToHistory(messageForSend);
@@ -224,6 +271,7 @@
 				transform: ev.transform,
 				transformOrigin: ev.target.style.transformOrigin
 			};
+            console.log("verg")
 			messageForSend.events.push(msg);
 		}
 		sendOrDraw(messageForSend);
