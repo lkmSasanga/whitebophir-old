@@ -922,13 +922,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		}
 
 		// var boardBackgroundColor = Tools.params.board.settings?.background?.color;
-		if (Tools.params.permissions.background && Tools.boardBackgroundColor) {
+		if (Tools.boardBackgroundColor) {
 			Tools.svg.style.backgroundColor = Tools.boardBackgroundColor;
 			if (Tools.boardBackgroundColor.toUpperCase !== '#FFFFFF') {
-				Tools.setColor('#FFFFFF');
+				Tools.setDrawColor('#FFFFFF');
 			}
 			else {
-				Tools.svg.style.backgroundColor = '#FFFFFF';
+				Tools.setDrawColor('#000000');
 			}
 		}
 		if (Tools.params.permissions.invite) {
