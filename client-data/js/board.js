@@ -483,8 +483,8 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 									event.transform = `translate(${Tools.pasteX}, ${Tools.pasteY}px)`;
 									event.transformOrigin = `${Tools.pasteX} ${Tools.pasteY}px`;
 								} else {
-									Tools.pasteX += 20;
-									Tools.pasteY += 20;
+									Tools.pasteX += 10;
+									Tools.pasteY += 10;
 									
 									event.transform = `translate(${Tools.pasteX}px, ${Tools.pasteY}px)`;
 									event.transformOrigin = `${Tools.pasteX}px ${Tools.pasteY}px`;
