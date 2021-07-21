@@ -240,8 +240,28 @@
 		});
 		Tools.send({ type: 'array', events: events });
 		Tools.addActionToHistory(dataForUndo);
-		Tools.sendAnalytic('Transform', 101)
+		Tools.sendAnalytic('Transform', 101);
 		moveable.request("draggable", {deltaX: 20, deltaY: 20}, true);
+	}
+
+	function copyObjects() {
+		if (targets) {
+			let events = targets.map((elem) => {
+				return {
+					'type': 'copy',
+					'boardName': Tools.boardName,
+					'id': elem.id,
+				}
+			});
+
+			Tools.send({
+				type: 'array',
+				events: events
+			});
+
+			Tools.pasteX = 0;
+			Tools.pasteY = screen.height / 2;
+		}
 	}
 
 	function actionsForEvent(evt) {
@@ -249,6 +269,8 @@
 			deleteSelectedTargets();
 		} else if (evt.keyCode === 68 && evt.ctrlKey) {
 			dublicateObjects();
+		} else if (evt.keyCode === 67 && evt.ctrlKey) {
+			copyObjects();
 		}
 	}
 
