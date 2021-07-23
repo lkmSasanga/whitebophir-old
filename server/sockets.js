@@ -169,6 +169,10 @@ async function saveHistoryArray(boardName, message, socket) {
 				socketEventName = "dublicateObjects";
 				data.events.push(board.get(event.id));
 				break;
+			case 'copy':
+				socketEventName = 'copyObjects';
+				data.events.push(board.get(event.id));
+				break;
 			case "delete":
 				if (event.id) {
 					if (message.sendBack && !message.sendToRedo) {

@@ -111,11 +111,11 @@ Tools.modalWindows = {
 //Initialization
 Tools.curTool = null;
 Tools.oldTool = null;
+Tools.boardBackgroundColor = null;
 Tools.drawingEvent = true;
 Tools.showMarker = false;
 Tools.showOtherCursors = true;
 Tools.showMyCursor = false;
-Tools.boardBackgroundColor = null;
 
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
@@ -172,6 +172,21 @@ Tools.connect = function () {
 			event.id = Tools.generateUID();
 			Tools.drawAndSend(event, Tools.list[event.tool]);
 		});
+	});
+
+	this.socket.on('copyObjects', function (msg) {
+		msg.events.forEach((event) => {
+			if (event.tool === 'Pencil') {
+				if (!event.properties) {
+					event.properties = [['d', document.getElementById(event.id).getAttribute('d')]];
+					event._children = [];
+				}
+			}
+		});
+
+		let elemText = JSON.stringify(msg.events);
+
+		navigator.clipboard.writeText(elemText);
 	});
 
 	this.socket.on("reconnect", function onReconnection() {
@@ -397,6 +412,20 @@ Tools.sendAnalytic = function (toolName, index) {
 	ym(CODE, 'reachGoal', Intruments[toolName][index]);
 };
 
+function verifyJson(text) {
+	try {
+		JSON.parse(text);
+	} catch(err) {
+		return false;
+	}
+	return true;
+}
+
+let pastedElems = false;
+Tools.pasteX = 0;
+Tools.pasteY = (screen.height * Tools.scale) / 2;
+
+
 (function hotkeys() {
 	const presetsList = document.getElementsByClassName('color-preset-box');
 	const sizes = [1, 3, 5, 9, 15];
@@ -404,39 +433,73 @@ Tools.sendAnalytic = function (toolName, index) {
 		document.addEventListener('keydown', function (e) {
 			if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 			if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) { //v
-				navigator.clipboard.read().then(function (data) {
-					for (var i = 0; data[0].types.length > i; i++) {
-						if (data[0].types[i] === 'text/plain') {//paste text
-							data[0].getType("text/plain").then(function (dataBuffer) {
-								Tools.change('Text');
-								const reader = new FileReader();
-								reader.onload = function (progressEvent) {
-									Tools.list.Text.createTextForPaste(progressEvent.target.result);
-								};
-								reader.readAsText(dataBuffer);
-								return;
-							});
-						} else if (data[0].types[i] === 'image/png') {
-							if (Tools.params.permissions.image) {
-								data[0].getType("image/png").then(function (dataBuffer) {
-									const reader = new FileReader();
-									reader.readAsDataURL(dataBuffer);
-									reader.onload = Tools.list.Document.workWithImage;
-								});
-							} else {
-								if (Tools.params.permissions.edit) {
-									createModal(Tools.modalWindows.premiumFunctionForOwner);
-								} else {
-									createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+				navigator.clipboard.readText().then((text) => {
+					if (!verifyJson(text)) {
+						navigator.clipboard.read().then(function (data) {
+							for (var i = 0; data[0].types.length > i; i++) {
+								if (data[0].types[i] === 'text/plain') {//paste text
+									data[0].getType("text/plain").then(function (dataBuffer) {
+										Tools.change('Text');
+										const reader = new FileReader();
+										reader.onload = function (progressEvent) {
+											Tools.list.Text.createTextForPaste(progressEvent.target.result);
+										};
+										reader.readAsText(dataBuffer);
+										return;
+									});
+								} else if (data[0].types[i] === 'image/png') {
+									if (Tools.params.permissions.image) {
+										data[0].getType("image/png").then(function (dataBuffer) {
+											const reader = new FileReader();
+											reader.readAsDataURL(dataBuffer);
+											reader.onload = Tools.list.Document.workWithImage;
+										});
+									} else {
+										if (Tools.params.permissions.edit) {
+											createModal(Tools.modalWindows.premiumFunctionForOwner);
+										} else {
+											createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+										}
+									}
+									return;
 								}
 							}
-							return;
-						}
-					}
+		
+						}).catch(function () {
+							createModal(Tools.modalWindows.errorOnPasteFromClipboard);
+						});
+					} else {
+						const dataForUndo = {type: 'array', events: []};
 
-				}).catch(function () {
-					createModal(Tools.modalWindows.errorOnPasteFromClipboard);
-				});
+						navigator.clipboard.readText().then(text => {
+							let pasteElems = JSON.parse(text);
+
+							pasteElems.forEach((event) => {		
+								dataForUndo.events.push({type: "delete", id: event.id});
+								event.id = Tools.generateUID();
+								if (!pastedElems) {
+									pastedElems = true;
+
+									event.transform = `translate(${Tools.pasteX}, ${Tools.pasteY}px)`;
+									event.transformOrigin = `${Tools.pasteX} ${Tools.pasteY}px`;
+								} else {
+									Tools.pasteX += 10;
+									Tools.pasteY += 10;
+									
+									event.transform = `translate(${Tools.pasteX}px, ${Tools.pasteY}px)`;
+									event.transformOrigin = `${Tools.pasteX}px ${Tools.pasteY}px`;
+								}
+
+								Tools.drawAndSend(event, Tools.list[event.tool]);
+							});
+							Tools.addActionToHistory(dataForUndo);
+						}).catch(err => {
+							console.log('Error when pasting objects: ', err);
+						});
+					}
+				}).catch((err) => {
+					console.log('Error when pasting text: ' + err);
+				})
 			} else if (e.keyCode === 32) {
 				e.preventDefault();
 				Tools.change('Hand');
@@ -473,7 +536,7 @@ Tools.sendAnalytic = function (toolName, index) {
 				} else {
 					Tools.setSize(sizes[0]);
 				}
-			} else if (e.keyCode === 67) { //c
+			} else if (e.keyCode === 67 && !e.ctrlKey) { //c
 				var indexForChange = 0;
 				for (var node of presetsList) {
 					if (node.classList.contains('selected-color')) {
@@ -1533,13 +1596,17 @@ function watchColorPicker(e) {
 		node.classList.remove('selected-color');
 	}
 	presetsList[0].classList.add('selected-color');
-	Tools.current_color.style.backgroundColor = e.target.value
+	Tools.current_color.style.backgroundColor = e.target.value;
+
 	if (Tools.targets) {
 		Tools.targets.forEach((elem) => {
-			if(elem.tagName === 'foreignObject'){
-				elem.childNodes[0].style.color = e.target.value
+			if (elem.tagName === 'foreignObject') {
+				elem.childNodes[0].style.color = e.target.value;
+			} else if (elem.tagName === 'g') {
+				elem.childNodes[1].setAttribute('fill', e.target.value);
 			}
-			elem.setAttribute('stroke', e.target.value)
+			
+			elem.setAttribute('stroke', e.target.value);
 		})
 		colorUpdate(Tools.targets);
 	}
