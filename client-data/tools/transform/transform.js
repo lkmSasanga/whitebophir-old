@@ -173,6 +173,7 @@
                             transform: ev.target.style.transform,
                             transformOrigin: ev.target.style.transformOrigin
                         };
+
                         messageForSend.events.push(msg);
                     });
                     Tools.addActionToHistory(messageForSend);
@@ -191,14 +192,17 @@
 
                     events.forEach(({ target, scale, drag }, i) => {
                         const frame = frames[i];
+
                         frame.translate = drag.beforeTranslate;
                         target.style.transform = drag.transform;
+
                         let msg = {
                             type: "update",
                             id: target.id,
                             transform: target.style.transform,
                             transformOrigin: target.style.transformOrigin
                         };
+
                         messageForSend.events.push(msg);
                     });
                     sendOrDraw(messageForSend);
@@ -248,7 +252,6 @@
 				transform: ev.target.style.transform,
 				transformOrigin: ev.target.style.transformOrigin
 			};
-            console.log("skizb")
 			messageForSend.events.push(msg);
 		}
 		Tools.addActionToHistory(messageForSend);
@@ -271,7 +274,7 @@
 				transform: ev.transform,
 				transformOrigin: ev.target.style.transformOrigin
 			};
-            console.log("verg")
+			
 			messageForSend.events.push(msg);
 		}
 		sendOrDraw(messageForSend);
