@@ -124,7 +124,7 @@
     function bannerClick(e) {
         if (e.target.getAttribute('id') === 'banner-ad') {
             ym(67204918,'reachGoal','banner_board_clck');
-            window.open('https://vk.cc/c2HoxW');//todo get from .env
+            window.open('https://vk.cc/c47Q7a');//todo get from .env
         }
     }
 })()
