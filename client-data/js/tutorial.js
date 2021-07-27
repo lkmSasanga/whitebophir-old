@@ -1,6 +1,6 @@
 const path = window.location.pathname.split('/');
 const boardName = decodeURIComponent(path[path.length - 1]);
-const server_config = JSON.parse(document.getElementById("configuration").text);
+const server_config = JSON.parse(document.getElementById('configuration').text);
 
 function initTutorial() {
     fetch(
