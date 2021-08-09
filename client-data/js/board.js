@@ -892,7 +892,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
     function goToHelp() {
 	    Tools.sendAnalytic('Help', 0);
-	    window.open(Tools.server_config.LANDING_URL + 'help');
+	    window.open('https://sboard.notion.site/c9caa4ef459140089dff294739d73dcd');
     }
 
     function scaleToCenter(deltaScale) {
