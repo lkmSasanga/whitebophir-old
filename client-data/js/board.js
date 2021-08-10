@@ -56,6 +56,13 @@ Tools.modalWindows = {
                 <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
                 Управлять тарифом
             </a>`,
+	premiumFunctionForOwnerBase: `<h2 class="modal-title">Функция недоступна!</h2>
+                <div class="modal-description">
+                    Вы уже добавили 3 изображения на доску. Удалите одно из них или смените тариф.
+                </div>
+                <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
+                Управлять тарифом
+            </a>`,
 	premiumFunctionForDefaultUser: `<h2 class="modal-title">Функция недоступна!</h2>
                 <div class="modal-description">
                     Эта функция не доступна, обратитесь к владельцу доски.
@@ -116,6 +123,7 @@ Tools.drawingEvent = true;
 Tools.showMarker = false;
 Tools.showOtherCursors = true;
 Tools.showMyCursor = false;
+Tools.imagesCount = 0;
 
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
@@ -1015,7 +1023,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		}
 
 		if (!Tools.params.permissions.image) {
-			document.getElementById('Tool-Document').classList.add('disabled-icon');
+            let addedImage = document.getElementById('added-image')
+			addedImage.addEventListener('mouseover', function (){
+				if (Tools.imagesCount === 3) {
+					document.getElementById('Tool-Document').classList.add('disabled-icon')
+				}
+				addedImage.setAttribute('data-tooltip', 'Добавить изображение (i) Доступно' + ' ' + (3 - Tools.imagesCount) + ' ' + 'из 3')
+            })
 		}
 
 		if (!Tools.params.permissions.cursors) {
@@ -1079,7 +1093,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 					"hasTrial": false,
 					"tariffId": 1,
 				},
-				"permissions": {"edit": true, "invite": true, "image": true, "pdf": true, "cursors": true, "background": true},
+				"permissions": {"edit": true, "invite": true, "image": false, "pdf": true, "cursors": true, "background": true},
 				"invite_link": "https:\/\/sboard.su\/cabinet\/boards\/join\/56dfgdfbh67="
 			};
             showBoard();
