@@ -1,6 +1,7 @@
 (function documents() { //Code isolation
     var xlinkNS = "http://www.w3.org/1999/xlink";
     const fileTypes = ['jpeg', 'jpg', 'webp', 'png', 'ico', 'svg'];
+    const baseTariffImgCount = 3;
     function preventDefault(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -34,7 +35,14 @@
     }
 
     function onstart() {
-        if (Tools.params.permissions.image) {
+            if (Tools.imagesCount >= baseTariffImgCount) {
+                if (!Tools.params.permissions.image) {
+                    setTimeout(function () {
+                        createModal(Tools.modalWindows.premiumFunctionForOwnerBase);
+                    }, 100);
+                    return false
+                }
+            }
             var fileInput = document.createElement("input");
             fileInput.type = "file";
             fileInput.accept = "image/*";
@@ -43,26 +51,18 @@
             document.body.appendChild(fileInput);
             fileInput.click();
             fileInput.addEventListener("change", function () {
+                Tools.imagesCount = Tools.imagesCount + 1
                 var reader = new FileReader();
                 reader.readAsDataURL(fileInput.files[0]);
                 reader.onload = function (e) {
                     workWithImage(e);
-                    document.body.removeChild(fileInput);
+                    Tools.drawAndSend({
+                        type : 'doc',
+                        imagesCount : Tools.imagesCount
+                    }, Tools.list.Document)
                 };
             });
-        } else {
-          if (Tools.params.permissions.edit) {
-            setTimeout(function () {
-              createModal(Tools.modalWindows.premiumFunctionForOwner);
-            }, 100);
-          } else {
-            setTimeout(function () {
-              createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
-            }, 100);
-          }
-        }
     }
-
     function workWithImage(e) {
         // use canvas to compress image
         var image = new Image();
@@ -73,7 +73,6 @@
             var scale = 1;
             do {
                 // Todo give feedback of processing effort
-
                 ctx = document.createElement("canvas").getContext("2d");
                 ctx.canvas.width = image.width * scale;
                 ctx.canvas.height = image.height * scale;
@@ -112,6 +111,7 @@
                 x: ((offsetHeight + document.documentElement.clientWidth / 2) / Tools.scale) - width / 2,
                 y: ((document.documentElement.scrollTop + document.documentElement.clientHeight / 2) / Tools.scale) - height / 2,
                 select: true,
+                imagesCount: Tools.imagesCount,
             };
             draw(msg);
             msg.select = false;
@@ -121,21 +121,26 @@
     };
 
     function draw(msg) {
-        var img = Tools.createSVGElement("image");
-        img.id = msg.id;
-        img.setAttributeNS(xlinkNS, "href", msg.data);
-        img.x.baseVal.value = msg['x'];
-        img.y.baseVal.value = msg['y'];
-        img.setAttribute("width", msg.w);
-        img.setAttribute("height", msg.h);
-        if (img.transform) {
-	        img.style.transform = msg.transform;
-	        img.style.transformOrigin = msg.transformOrigin;
+        if (msg.id) {
+            var img = Tools.createSVGElement("image");
+            img.id = msg.id;
+            img.setAttributeNS(xlinkNS, "href", msg.data);
+            img.x.baseVal.value = msg['x'];
+            img.y.baseVal.value = msg['y'];
+            img.setAttribute("width", msg.w);
+            img.setAttribute("height", msg.h);
+            if (img.transform) {
+                img.style.transform = msg.transform;
+                img.style.transformOrigin = msg.transformOrigin;
+            }
+            Tools.drawingArea.appendChild(img);
+            if (msg.select) {
+                Tools.change("Transform", 1);
+                Tools.list.Transform.selectElement(img);
+            }
         }
-        Tools.drawingArea.appendChild(img);
-        if (msg.select) {
-            Tools.change("Transform", 1);
-            Tools.list.Transform.selectElement(img);
+        if (msg.imagesCount) {
+            Tools.imagesCount = msg.imagesCount;
         }
     }
 

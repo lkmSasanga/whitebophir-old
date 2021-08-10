@@ -136,6 +136,10 @@
 				}
 				break;
 			case "clearBoard":
+				Tools.imagesCount = 0;
+				if (Tools.imagesCount < 3) {
+					document.getElementById('Tool-Document').classList.remove('disabled-icon')
+				}
 				Tools.historyRedo.splice(0, Tools.historyRedo.length);
 				Tools.history.splice(0, Tools.history.length);
 				Tools.disableToolsEl('undo');

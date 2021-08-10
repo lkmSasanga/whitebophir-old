@@ -333,9 +333,16 @@
 	function deleteSelectedTargets() {
 		destroyMoveable();
 		destroySelecto();
-		const data = {type: 'array', events: []};
+		const data = { type: 'array', events: [] };
 		targets.forEach(function (target) {
-			data.events.push({type: "delete", id: target.id});
+			if (target.tagName === 'image' && !target.hasAttribute("data-formula")) {
+				Tools.imagesCount = Tools.imagesCount - 1;
+				if (Tools.imagesCount < 3) {
+					document.getElementById('Tool-Document').classList.remove('disabled-icon')
+				}
+			}
+
+			data.events.push( { type: "delete", id: target.id } );
 		});
 		data.sendBack = true;
 		Tools.drawAndSend(data, Tools.list.Eraser);
