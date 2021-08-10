@@ -1022,9 +1022,9 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			document.querySelector('.js-cursors').classList.add('disabled-icon');
 		}
 
-		if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
-			document.getElementById('upgrade-board-btn').classList.remove('hide');
-		}
+		// if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
+		// 	document.getElementById('upgrade-board-btn').classList.remove('hide');
+		// }
 
 		if (!Tools.params.permissions.background) {
 			const bgBtns = document.querySelectorAll('.js-change-bgcolor');
