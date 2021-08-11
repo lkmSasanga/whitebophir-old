@@ -51,15 +51,11 @@
             document.body.appendChild(fileInput);
             fileInput.click();
             fileInput.addEventListener("change", function () {
-                Tools.imagesCount = Tools.imagesCount + 1
+                // Tools.imagesCount = Tools.imagesCount + 1
                 var reader = new FileReader();
                 reader.readAsDataURL(fileInput.files[0]);
                 reader.onload = function (e) {
                     workWithImage(e);
-                    Tools.drawAndSend({
-                        type : 'doc',
-                        imagesCount : Tools.imagesCount
-                    }, Tools.list.Document)
                 };
             });
     }
@@ -121,7 +117,14 @@
     };
 
     function draw(msg) {
-        if (msg.id) {
+        if (Tools.imagesCount >= baseTariffImgCount) {
+            if (!Tools.params.permissions.image) {
+                setTimeout(function () {
+                    createModal(Tools.modalWindows.premiumFunctionForOwnerBase);
+                }, 100);
+                return false
+            }
+        }
             var img = Tools.createSVGElement("image");
             img.id = msg.id;
             img.setAttributeNS(xlinkNS, "href", msg.data);
@@ -138,9 +141,8 @@
                 Tools.change("Transform", 1);
                 Tools.list.Transform.selectElement(img);
             }
-        }
-        if (msg.imagesCount) {
-            Tools.imagesCount = msg.imagesCount;
+        if (msg.type === 'doc') {
+            Tools.imagesCount++
         }
     }
 
