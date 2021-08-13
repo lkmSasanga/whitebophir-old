@@ -1406,7 +1406,6 @@ Tools.createSVGElement = function createSVGElement(name, attrs) {
 Tools.getMarkerBoundingRect = function (el, r, m) {
 	var marker = el.getAttributeNS(null, "marker-end");
 	if (marker && marker.split("_")[0] == "url(#arrw") {
-		console.log('getMarkerBoundingRecy');
 		var x = el.x1.baseVal.value;
 		var x2 = el.x2.baseVal.value;
 		var y = el.y1.baseVal.value;

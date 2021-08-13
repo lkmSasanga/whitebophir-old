@@ -166,10 +166,8 @@
 
 	const defs = document.getElementById('defs');
 	function createMarker(color) {
-		console.log('create marker');
 		const id = 'arrw_' + color.replace('#', '');
 		if (!document.getElementById(id)) {
-			console.log('create if');
 			var marker = Tools.createSVGElement("marker", {
 				id: "arrw_" + color.replace('#', ''),
 				markerWidth: "6",
