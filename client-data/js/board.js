@@ -201,6 +201,26 @@ Tools.boardName = (function () {
 	return decodeURIComponent(path[path.length - 1]);
 })();
 
+Tools.apiToken = (function () {
+	const urlSearchParams = new URLSearchParams(window.location.search);
+	const params = Object.fromEntries(urlSearchParams.entries());
+	if (params.t) {
+		sessionStorage.setItem('token', params.t)
+	}
+
+	return sessionStorage.getItem('token');
+})();
+
+Tools.api = (function () {
+	const urlSearchParams = new URLSearchParams(window.location.search);
+	const params = Object.fromEntries(urlSearchParams.entries());
+	if (params.api) {
+		sessionStorage.setItem('api', params.api)
+	}
+
+	return sessionStorage.getItem('api');
+})();
+
 //Get the board as soon as the page is loaded
 Tools.socket.emit("getboard", Tools.boardName);
 
@@ -808,7 +828,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			} else if (evt.target && evt.target.dataset.asyncaction) {
 				const newName = document.getElementById('newBoardName').value;
 				Tools.sendAnalytic('Cabinet', 1)
-				fetch(Tools.server_config.API_URL + 'boards/' + Tools.boardName + '?name=' + newName,
+				fetch(Tools.server_config.API_URL + 'boards/' + Tools.boardName + '?name=' + newName + '&token=' + Tools.apiToken,
 					{
 						method: 'GET',
 						credentials: 'include',
@@ -1043,7 +1063,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			var lastPosY = Tools.mousePosition.y;
 			return function () {
 				if (lastPosX !== Tools.mousePosition.x || lastPosY !== Tools.mousePosition.y) {
-					fetch(Tools.server_config.API_URL + `boards/${Tools.boardName}/activity`, {
+					fetch(Tools.server_config.API_URL + `boards/${Tools.boardName}/activity?token=${Tools.apiToken}`, {
 						credentials: "include",
 						mode: 'no-cors',
 					});
@@ -1086,7 +1106,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
             return;
         }
         fetch(
-            Tools.server_config.API_URL + 'boards/' + Tools.boardName + '/info',
+            Tools.server_config.API_URL + 'boards/' + Tools.boardName + '/info' + `?token=${Tools.apiToken}`,
             {
                 headers: new Headers({
                     'Accept': 'application/json',
@@ -1110,9 +1130,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
                 showBoard();
             })
             .catch(function (error) {
-				console.error(error)
+				console.error(error.message)
 				if (error.message === 'Unauthenticated user') {
-					window.location.href = Tools.server_config.CABINET_URL + 'boards/' + Tools.boardName + '/reopen';
+					if (Tools.api) {
+						throw error;
+					} else {
+						window.location.href = Tools.server_config.CABINET_URL;
+					}
 				} else if (error.message === 'Forbidden') {
 					window.location.href = Tools.server_config.CABINET_URL + 'boards/' + Tools.boardName + '/forbidden';
 				} else {
