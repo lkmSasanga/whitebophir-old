@@ -145,6 +145,7 @@
 		if (lineData.arrow) {
 			createMarker(color);
 			line.style = `marker-end: url(#arrw_${color.replace('#', '')});`
+			line.setAttribute('class', 'line-arrow');
 		}
 		line.id = lineData.id;
 		line.x1.baseVal.value = lineData['x'];
@@ -165,10 +166,12 @@
 
 	const defs = document.getElementById('defs');
 	function createMarker(color) {
+		console.log('create marker');
 		const id = 'arrw_' + color.replace('#', '');
 		if (!document.getElementById(id)) {
+			console.log('create if');
 			var marker = Tools.createSVGElement("marker", {
-				id: "arrw_"+color.replace('#', ''),
+				id: "arrw_" + color.replace('#', ''),
 				markerWidth: "6",
 				markerHeight: "4",
 				refX: "0",
@@ -176,7 +179,7 @@
 				orient:"auto"
 			});
 			var polygon = Tools.createSVGElement("polygon", {
-				id:"arrw_poly_"+color.replace('#', ''),
+				id:"arrw_poly_" + color.replace('#', ''),
 				points:"0 0, 6 2, 0 4",
 				fill: color || "black"
 			});
@@ -184,6 +187,8 @@
 			defs.appendChild(marker);
 		}
 	}
+
+	Tools.createMarker = createMarker;
 
 	function updateLine(line, data) {
 		line.x2.baseVal.value = data['x2'] + 0.01;

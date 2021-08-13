@@ -1406,7 +1406,7 @@ Tools.createSVGElement = function createSVGElement(name, attrs) {
 Tools.getMarkerBoundingRect = function (el, r, m) {
 	var marker = el.getAttributeNS(null, "marker-end");
 	if (marker && marker.split("_")[0] == "url(#arrw") {
-
+		console.log('getMarkerBoundingRecy');
 		var x = el.x1.baseVal.value;
 		var x2 = el.x2.baseVal.value;
 		var y = el.y1.baseVal.value;
@@ -1556,9 +1556,12 @@ Tools.setColor = function (color) {
 				elem.childNodes[0].style.color = color;
 			} else if (elem.tagName === 'g') {
 				elem.childNodes[1].setAttribute('fill', color);
+			} else if (elem.classList.contains('line-arrow')) {
+				Tools.createMarker(color);
+				elem.style = `marker-end: url(#arrw_${ color.replace('#', '') });`
 			}
 			
-    		elem.setAttribute('stroke', color)
+    		elem.setAttribute('stroke', color);
 		})
 		colorUpdate(Tools.targets);
 	}
@@ -1604,6 +1607,9 @@ function watchColorPicker(e) {
 				elem.childNodes[0].style.color = e.target.value;
 			} else if (elem.tagName === 'g') {
 				elem.childNodes[1].setAttribute('fill', e.target.value);
+			} else if (elem.classList.contains('line-arrow')) {
+				Tools.createMarker(e.target.value);
+				elem.style = `marker-end: url(#arrw_${ e.target.value.replace('#', '') });`
 			}
 			
 			elem.setAttribute('stroke', e.target.value);
