@@ -1,6 +1,7 @@
 (function documents() { //Code isolation
     var xlinkNS = "http://www.w3.org/1999/xlink";
     const fileTypes = ['jpeg', 'jpg', 'webp', 'png', 'ico', 'svg'];
+    const baseTariffImgCount = 3;
     function preventDefault(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -68,7 +69,6 @@
         }
       }
     }
-
     function workWithImage(e) {
         // use canvas to compress image
         var image = new Image();
@@ -79,7 +79,6 @@
             var scale = 1;
             do {
                 // Todo give feedback of processing effort
-
                 ctx = document.createElement("canvas").getContext("2d");
                 ctx.canvas.width = image.width * scale;
                 ctx.canvas.height = image.height * scale;
@@ -118,6 +117,7 @@
                 x: ((offsetHeight + document.documentElement.clientWidth / 2) / Tools.scale) - width / 2,
                 y: ((document.documentElement.scrollTop + document.documentElement.clientHeight / 2) / Tools.scale) - height / 2,
                 select: true,
+                imagesCount: Tools.imagesCount,
             };
             draw(msg);
             msg.select = false;
@@ -144,6 +144,9 @@
             Tools.change("Transform", 1);
             Tools.list.Transform.selectElement(img);
         }
+        // if (msg.imagesCount) {
+        //     Tools.imagesCount = msg.imagesCount;
+        // }
     }
 
     Tools.add({

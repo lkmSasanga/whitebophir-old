@@ -333,7 +333,7 @@
 	function deleteSelectedTargets() {
 		destroyMoveable();
 		destroySelecto();
-		const data = {type: 'array', events: []};
+		const data = { type: 'array', events: [] };
 		targets.forEach(function (target) {
 			if (target.classList.contains('board-image') && Tools.imagesCount !== 'infinity') {
 				data.events.push({ type: 'getImagesCount', id: target.id })

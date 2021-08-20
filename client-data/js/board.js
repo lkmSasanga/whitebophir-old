@@ -56,6 +56,13 @@ Tools.modalWindows = {
                 <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
                 Управлять тарифом
             </a>`,
+	premiumFunctionForOwnerBase: `<h2 class="modal-title">Функция недоступна!</h2>
+                <div class="modal-description">
+                    Вы уже добавили 3 изображения на доску. Удалите одно из них или смените тариф.
+                </div>
+                <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
+                Управлять тарифом
+            </a>`,
 	premiumFunctionForDefaultUser: `<h2 class="modal-title">Функция недоступна!</h2>
                 <div class="modal-description">
                     Эта функция не доступна, обратитесь к владельцу доски.
@@ -941,7 +948,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
     function goToHelp() {
 	    Tools.sendAnalytic('Help', 0);
-	    window.open(Tools.server_config.LANDING_URL + 'help');
+	    window.open('https://sboard.notion.site/c9caa4ef459140089dff294739d73dcd');
     }
 
     function scaleToCenter(deltaScale) {
@@ -1026,8 +1033,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		.then(result => {
 			Tools.imagesCount = result;
 
-			console.log(result, 'seTImagesB');
-
 			if (Tools.params.permissions.image !== 'infinity') {
 				let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
 	
@@ -1087,9 +1092,9 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			document.querySelector('.js-cursors').classList.add('disabled-icon');
 		}
 
-		if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
-			document.getElementById('upgrade-board-btn').classList.remove('hide');
-		}
+		// if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
+		// 	document.getElementById('upgrade-board-btn').classList.remove('hide');
+		// }
 
 		if (!Tools.params.permissions.background) {
 			const bgBtns = document.querySelectorAll('.js-change-bgcolor');
@@ -1144,7 +1149,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 					"hasTrial": false,
 					"tariffId": 1,
 				},
-				"permissions": {"edit": true, "invite": true, "image": 'infinity', "pdf": true, "cursors": true, "background": true},
+				"permissions": {"edit": true, "invite": true, "image": 4, "pdf": true, "cursors": true, "background": true},
 				"invite_link": "https:\/\/sboard.su\/cabinet\/boards\/join\/56dfgdfbh67="
 			};
             showBoard();
