@@ -177,8 +177,7 @@ Tools.connect = function () {
 					event.properties = [['d', document.getElementById(event.id).getAttribute('d')]];
 					event._children = [];
 				}
-			} else if (event.type === 'doc' && Tools.imagesCount + 1 > Tools.imagesLimit) {
-				console.log('create modal 1');
+			} else if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
 				if (Tools.params.permissions.edit) {
 					createModal(Tools.modalWindows.reachedImagesLimit, () => {
 					  document.querySelector('.image-limit-desc').innerHTML = 
@@ -189,7 +188,6 @@ Tools.connect = function () {
 				}
 				return;
 			}
-			console.log(event, 'dublicate');
 			event.id = Tools.generateUID();
 			Tools.drawAndSend(event, Tools.list[event.tool]);
 		});
@@ -515,7 +513,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 							let pasteElems = JSON.parse(text);
 
 							pasteElems.forEach((event) => {		
-								if (event.type === 'doc' && Tools.imagesCount + 1 > Tools.imagesLimit) {
+								if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
 									if (Tools.params.permissions.edit) {
 										createModal(Tools.modalWindows.reachedImagesLimit, () => {
 										  document.querySelector('.image-limit-desc').innerHTML = 
@@ -1027,7 +1025,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		.then(res => res.json())
 		.then(result => {
 			Tools.imagesCount = result;
-			Tools.imagesLimit = Tools.params.permissions.image;
 
 			console.log(result, 'seTImagesB');
 
@@ -1041,6 +1038,8 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
     function showBoard() {
 		const userData = Tools.params.user;
+
+		Tools.imagesLimit = Tools.params.permissions.image;
 
         Tools.boardTitle = Tools.params.board.name;
         updateDocumentTitle();
@@ -1145,7 +1144,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 					"hasTrial": false,
 					"tariffId": 1,
 				},
-				"permissions": {"edit": true, "invite": true, "image": 3, "pdf": true, "cursors": true, "background": true},
+				"permissions": {"edit": true, "invite": true, "image": 'infinity', "pdf": true, "cursors": true, "background": true},
 				"invite_link": "https:\/\/sboard.su\/cabinet\/boards\/join\/56dfgdfbh67="
 			};
             showBoard();
