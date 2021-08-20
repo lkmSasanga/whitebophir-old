@@ -76,6 +76,13 @@ Tools.modalWindows = {
                     <div class="modal-description">
                        Неподдерживаемый тип изображения! Поддерживаются: jpeg, jpg, webp, png, svg, ico.
                      </div>`,
+	reachedImagesLimit: `<h2 class="modal-title">Функция недоступна!</h2>
+					<div class="modal-description image-limit-desc">
+						Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.
+					</div>
+					<a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
+					Управлять тарифом
+				</a>`,
 	errorOnPasteFromClipboard: `<h2 class="modal-title">Не удалось вставить текст/изображение</h2>
                     <div class="modal-description">
                        Произошла ошибка при вставке текста или изображения. Возможно, вы не дали разрешение на чтение данных из буфера обмена.
@@ -116,6 +123,8 @@ Tools.drawingEvent = true;
 Tools.showMarker = false;
 Tools.showOtherCursors = true;
 Tools.showMyCursor = false;
+Tools.imagesCount = 0;
+Tools.imagesLimit = 0;
 
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
@@ -168,7 +177,19 @@ Tools.connect = function () {
 					event.properties = [['d', document.getElementById(event.id).getAttribute('d')]];
 					event._children = [];
 				}
+			} else if (event.type === 'doc' && Tools.imagesCount + 1 > Tools.imagesLimit) {
+				console.log('create modal 1');
+				if (Tools.params.permissions.edit) {
+					createModal(Tools.modalWindows.reachedImagesLimit, () => {
+					  document.querySelector('.image-limit-desc').innerHTML = 
+							  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+					});
+				} else {
+					createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+				}
+				return;
 			}
+			console.log(event, 'dublicate');
 			event.id = Tools.generateUID();
 			Tools.drawAndSend(event, Tools.list[event.tool]);
 		});
@@ -187,6 +208,22 @@ Tools.connect = function () {
 		let elemText = JSON.stringify(msg.events);
 
 		navigator.clipboard.writeText(elemText);
+	});
+
+	this.socket.on('getImagesCount', function (msg) {
+		if (Tools.params.permissions.image !== 'infinity') {
+			const imageTool = document.querySelector('.image-tool');
+
+			if (!isNaN(msg)) { // if msg is a number
+				Tools.imagesCount = msg;
+			} else { // minus deleted docs
+				Tools.imagesCount -= msg.events.length;
+			}
+
+			let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
+
+			imageTool.setAttribute('data-tooltip', tooltipLine);
+		}
 	});
 
 	this.socket.on("reconnect", function onReconnection() {
@@ -448,7 +485,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 										return;
 									});
 								} else if (data[0].types[i] === 'image/png') {
-									if (Tools.params.permissions.image) {
+									if (Tools.imagesLimit === 'infinity' || Tools.imagesCount < Tools.imagesLimit) {
 										data[0].getType("image/png").then(function (dataBuffer) {
 											const reader = new FileReader();
 											reader.readAsDataURL(dataBuffer);
@@ -456,7 +493,10 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 										});
 									} else {
 										if (Tools.params.permissions.edit) {
-											createModal(Tools.modalWindows.premiumFunctionForOwner);
+											createModal(Tools.modalWindows.reachedImagesLimit, () => {
+												document.querySelector('.image-limit-desc').innerHTML = 
+														`Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+											});
 										} else {
 											createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
 										}
@@ -475,6 +515,17 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 							let pasteElems = JSON.parse(text);
 
 							pasteElems.forEach((event) => {		
+								if (event.type === 'doc' && Tools.imagesCount + 1 > Tools.imagesLimit) {
+									if (Tools.params.permissions.edit) {
+										createModal(Tools.modalWindows.reachedImagesLimit, () => {
+										  document.querySelector('.image-limit-desc').innerHTML = 
+												  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+										});
+									} else {
+										createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+									}
+									return;
+								}
 								dataForUndo.events.push({type: "delete", id: event.id});
 								event.id = Tools.generateUID();
 								if (!pastedElems) {
@@ -969,6 +1020,25 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			Tools.sendAnalytic('Export', 1)
     }
 
+	Tools.setImagesCount = function setImagesCount() {
+		fetch(
+			'http://board.test/' + 'getImagesCount/' + Tools.boardName
+		)
+		.then(res => res.json())
+		.then(result => {
+			Tools.imagesCount = result;
+			Tools.imagesLimit = Tools.params.permissions.image;
+
+			console.log(result, 'seTImagesB');
+
+			if (Tools.params.permissions.image !== 'infinity') {
+				let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
+	
+				document.querySelector('.image-tool').setAttribute('data-tooltip', tooltipLine);
+			}
+		})
+	};
+
     function showBoard() {
 		const userData = Tools.params.user;
 
@@ -1012,10 +1082,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 				: 'Показать курсоры участников';
 
 			document.getElementById('btnCursors').setAttribute('data-tooltip', btnCursorTitle);
-		}
-
-		if (!Tools.params.permissions.image) {
-			document.getElementById('Tool-Document').classList.add('disabled-icon');
 		}
 
 		if (!Tools.params.permissions.cursors) {
@@ -1079,10 +1145,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 					"hasTrial": false,
 					"tariffId": 1,
 				},
-				"permissions": {"edit": true, "invite": true, "image": true, "pdf": true, "cursors": true, "background": true},
+				"permissions": {"edit": true, "invite": true, "image": 3, "pdf": true, "cursors": true, "background": true},
 				"invite_link": "https:\/\/sboard.su\/cabinet\/boards\/join\/56dfgdfbh67="
 			};
             showBoard();
+			if (Tools.params.permissions.image !== 'infinity') {
+				Tools.setImagesCount();
+			}
             return;
         }
         fetch(
@@ -1109,6 +1178,11 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
                 Tools.params = data;
                 showBoard();
             })
+			.then(() => {
+				if (Tools.params.permissions.image !== 'infinity') {
+					Tools.setImagesCount();
+				}
+			})
             .catch(function (error) {
 				console.error(error)
 				if (error.message === 'Unauthenticated user') {
@@ -1118,7 +1192,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 				} else {
 					//window.location.href = Tools.server_config.CABINET_URL + 'boards/' + Tools.boardName + '/unknown';
 				}
-			})
+			});
     }
 
 	document.getElementById('scalingWidth').addEventListener('click', scaleToWidth, false);

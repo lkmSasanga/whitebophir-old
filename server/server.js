@@ -87,6 +87,13 @@ function handleRequest(request, response) {
 	if (parts[0] === '') parts.shift();
 
 	switch (parts[0]) {
+		case 'getImagesCount':
+			bd.BoardData.prototype.getImagesCount(parts[1]).then(res => {
+				response.writeHead(200, { 'Content-Type': 'application/json' });
+				response.write(JSON.stringify(res));
+				response.end();
+			})
+			break;
 		case "boards":
 			// "boards" refers to the root directory
 			//log('board action', { 'url': request.url });

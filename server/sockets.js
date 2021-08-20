@@ -169,6 +169,11 @@ async function saveHistoryArray(boardName, message, socket) {
 				socketEventName = "dublicateObjects";
 				data.events.push(board.get(event.id));
 				break;
+			case 'getImagesCount': 
+				socketEventName = 'getImagesCount';
+				data.events.push(board.get(event.id));
+				board.delete(event.id);
+				break;
 			case 'copy':
 				socketEventName = 'copyObjects';
 				data.events.push(board.get(event.id));
@@ -201,6 +206,12 @@ async function saveHistory(boardName, message, socket) {
 		case "dublicate":
 			socket.emit("dublicateObject", board.get(id));
 			break;
+		case 'doc':
+			board.getImagesCount(boardName).then(res => {
+				socket.emit("getImagesCount", res + 1);
+			});
+			board.set(id, message);
+			break;
 		case "delete":
 			if (id) {
 				if (message.sendBack && !message.sendToRedo) {
@@ -223,6 +234,7 @@ async function saveHistory(boardName, message, socket) {
 			}
 			board.clearAll();
 			socket.broadcast.to(board.name).emit('clearBoard');
+			socket.emit('getImagesCount', message.imagesCount);
 			break;
 		case "background":
 			board.updateBoard(board.name, message);

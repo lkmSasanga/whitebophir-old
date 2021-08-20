@@ -97,16 +97,22 @@ async function getBoard(boardName) {
 }
 
 /** Получает доску по имени, если такой доски не существует возвращает null **/
-async function getBoardData(boardName) {
+async function getBoardData(boardName, type = null) {
     const collection = db.collection('boardData');
 
-    let result = await collection.find({name: boardName}).toArray();
+    let result;
 
-    for(id in result) {
+    if (type) {
+        result = await collection.find({ name: boardName, 'data.type': type}).toArray();
+    } else {
+        result = await collection.find({name: boardName}).toArray();
+    }
+
+    for (id in result) {
         delete result[id]._id;
     }
 
-    return result
+    return result;
 }
 
 /** Получает доску по имени, если такой доски не существует возвращает null **/
