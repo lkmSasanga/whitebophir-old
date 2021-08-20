@@ -1027,7 +1027,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
 	Tools.setImagesCount = function setImagesCount() {
 		fetch(
-			'http://board.test/' + 'getImagesCount/' + Tools.boardName
+			'/getImagesCount/' + Tools.boardName
 		)
 		.then(res => res.json())
 		.then(result => {
