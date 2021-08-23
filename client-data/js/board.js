@@ -56,6 +56,13 @@ Tools.modalWindows = {
                 <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
                 Управлять тарифом
             </a>`,
+	premiumFunctionForOwnerBase: `<h2 class="modal-title">Функция недоступна!</h2>
+                <div class="modal-description">
+                    Вы уже добавили 3 изображения на доску. Удалите одно из них или смените тариф.
+                </div>
+                <a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
+                Управлять тарифом
+            </a>`,
 	premiumFunctionForDefaultUser: `<h2 class="modal-title">Функция недоступна!</h2>
                 <div class="modal-description">
                     Эта функция не доступна, обратитесь к владельцу доски.
@@ -76,6 +83,13 @@ Tools.modalWindows = {
                     <div class="modal-description">
                        Неподдерживаемый тип изображения! Поддерживаются: jpeg, jpg, webp, png, svg, ico.
                      </div>`,
+	reachedImagesLimit: `<h2 class="modal-title">Функция недоступна!</h2>
+					<div class="modal-description image-limit-desc">
+						Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.
+					</div>
+					<a href="${Tools.server_config.LANDING_URL}cabinet/tariff" class="btn btn-green">
+					Управлять тарифом
+				</a>`,
 	errorOnPasteFromClipboard: `<h2 class="modal-title">Не удалось вставить текст/изображение</h2>
                     <div class="modal-description">
                        Произошла ошибка при вставке текста или изображения. Возможно, вы не дали разрешение на чтение данных из буфера обмена.
@@ -116,6 +130,8 @@ Tools.drawingEvent = true;
 Tools.showMarker = false;
 Tools.showOtherCursors = true;
 Tools.showMyCursor = false;
+Tools.imagesCount = 0;
+Tools.imagesLimit = 0;
 
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
@@ -168,6 +184,16 @@ Tools.connect = function () {
 					event.properties = [['d', document.getElementById(event.id).getAttribute('d')]];
 					event._children = [];
 				}
+			} else if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
+				if (Tools.params.permissions.edit) {
+					createModal(Tools.modalWindows.reachedImagesLimit, () => {
+					  document.querySelector('.image-limit-desc').innerHTML = 
+							  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+					});
+				} else {
+					createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+				}
+				return;
 			}
 			event.id = Tools.generateUID();
 			Tools.drawAndSend(event, Tools.list[event.tool]);
@@ -187,6 +213,22 @@ Tools.connect = function () {
 		let elemText = JSON.stringify(msg.events);
 
 		navigator.clipboard.writeText(elemText);
+	});
+
+	this.socket.on('getImagesCount', function (msg) {
+		if (Tools.params.permissions.image !== 'infinity') {
+			const imageTool = document.querySelector('.image-tool');
+
+			if (!isNaN(msg)) { // if msg is a number
+				Tools.imagesCount = msg;
+			} else { // minus deleted docs
+				Tools.imagesCount -= msg.events.length;
+			}
+
+			let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
+
+			imageTool.setAttribute('data-tooltip', tooltipLine);
+		}
 	});
 
 	this.socket.on("reconnect", function onReconnection() {
@@ -468,7 +510,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 										return;
 									});
 								} else if (data[0].types[i] === 'image/png') {
-									if (Tools.params.permissions.image) {
+									if (Tools.imagesLimit === 'infinity' || Tools.imagesCount < Tools.imagesLimit) {
 										data[0].getType("image/png").then(function (dataBuffer) {
 											const reader = new FileReader();
 											reader.readAsDataURL(dataBuffer);
@@ -476,7 +518,10 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 										});
 									} else {
 										if (Tools.params.permissions.edit) {
-											createModal(Tools.modalWindows.premiumFunctionForOwner);
+											createModal(Tools.modalWindows.reachedImagesLimit, () => {
+												document.querySelector('.image-limit-desc').innerHTML = 
+														`Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+											});
 										} else {
 											createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
 										}
@@ -495,6 +540,17 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 							let pasteElems = JSON.parse(text);
 
 							pasteElems.forEach((event) => {		
+								if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
+									if (Tools.params.permissions.edit) {
+										createModal(Tools.modalWindows.reachedImagesLimit, () => {
+										  document.querySelector('.image-limit-desc').innerHTML = 
+												  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+										});
+									} else {
+										createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+									}
+									return;
+								}
 								dataForUndo.events.push({type: "delete", id: event.id});
 								event.id = Tools.generateUID();
 								if (!pastedElems) {
@@ -912,7 +968,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
     function goToHelp() {
 	    Tools.sendAnalytic('Help', 0);
-	    window.open(Tools.server_config.LANDING_URL + 'help');
+	    window.open('https://sboard.notion.site/c9caa4ef459140089dff294739d73dcd');
     }
 
     function scaleToCenter(deltaScale) {
@@ -989,8 +1045,26 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			Tools.sendAnalytic('Export', 1)
     }
 
+	Tools.setImagesCount = function setImagesCount() {
+		fetch(
+			'/getImagesCount/' + Tools.boardName
+		)
+		.then(res => res.json())
+		.then(result => {
+			Tools.imagesCount = result;
+
+			if (Tools.params.permissions.image !== 'infinity') {
+				let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
+	
+				document.querySelector('.image-tool').setAttribute('data-tooltip', tooltipLine);
+			}
+		})
+	};
+
     function showBoard() {
 		const userData = Tools.params.user;
+
+		Tools.imagesLimit = Tools.params.permissions.image;
 
         Tools.boardTitle = Tools.params.board.name;
         updateDocumentTitle();
@@ -1034,17 +1108,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			document.getElementById('btnCursors').setAttribute('data-tooltip', btnCursorTitle);
 		}
 
-		if (!Tools.params.permissions.image) {
-			document.getElementById('Tool-Document').classList.add('disabled-icon');
-		}
-
 		if (!Tools.params.permissions.cursors) {
 			document.querySelector('.js-cursors').classList.add('disabled-icon');
 		}
 
-		if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
-			document.getElementById('upgrade-board-btn').classList.remove('hide');
-		}
+		// if (userData.role === 'tutor' && userData.tariffId === 1 && !userData.hasTrial) {
+		// 	document.getElementById('upgrade-board-btn').classList.remove('hide');
+		// }
 
 		if (!Tools.params.permissions.background) {
 			const bgBtns = document.querySelectorAll('.js-change-bgcolor');
@@ -1099,10 +1169,13 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 					"hasTrial": false,
 					"tariffId": 1,
 				},
-				"permissions": {"edit": true, "invite": true, "image": true, "pdf": true, "cursors": true, "background": true},
+				"permissions": {"edit": true, "invite": true, "image": 4, "pdf": true, "cursors": true, "background": true},
 				"invite_link": "https:\/\/sboard.su\/cabinet\/boards\/join\/56dfgdfbh67="
 			};
             showBoard();
+			if (Tools.params.permissions.image !== 'infinity') {
+				Tools.setImagesCount();
+			}
             return;
         }
         fetch(
@@ -1129,6 +1202,11 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
                 Tools.params = data;
                 showBoard();
             })
+			.then(() => {
+				if (Tools.params.permissions.image !== 'infinity') {
+					Tools.setImagesCount();
+				}
+			})
             .catch(function (error) {
 				console.error(error.message)
 				if (error.message === 'Unauthenticated user') {
@@ -1142,7 +1220,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 				} else {
 					//window.location.href = Tools.server_config.CABINET_URL + 'boards/' + Tools.boardName + '/unknown';
 				}
-			})
+			});
     }
 
 	document.getElementById('scalingWidth').addEventListener('click', scaleToWidth, false);
@@ -1430,7 +1508,6 @@ Tools.createSVGElement = function createSVGElement(name, attrs) {
 Tools.getMarkerBoundingRect = function (el, r, m) {
 	var marker = el.getAttributeNS(null, "marker-end");
 	if (marker && marker.split("_")[0] == "url(#arrw") {
-
 		var x = el.x1.baseVal.value;
 		var x2 = el.x2.baseVal.value;
 		var y = el.y1.baseVal.value;
@@ -1580,9 +1657,12 @@ Tools.setColor = function (color) {
 				elem.childNodes[0].style.color = color;
 			} else if (elem.tagName === 'g') {
 				elem.childNodes[1].setAttribute('fill', color);
+			} else if (elem.classList.contains('line-arrow')) {
+				Tools.createMarker(color);
+				elem.style = `marker-end: url(#arrw_${ color.replace('#', '') });`
 			}
 			
-    		elem.setAttribute('stroke', color)
+    		elem.setAttribute('stroke', color);
 		})
 		colorUpdate(Tools.targets);
 	}
@@ -1628,6 +1708,9 @@ function watchColorPicker(e) {
 				elem.childNodes[0].style.color = e.target.value;
 			} else if (elem.tagName === 'g') {
 				elem.childNodes[1].setAttribute('fill', e.target.value);
+			} else if (elem.classList.contains('line-arrow')) {
+				Tools.createMarker(e.target.value);
+				elem.style = `marker-end: url(#arrw_${ e.target.value.replace('#', '') });`
 			}
 			
 			elem.setAttribute('stroke', e.target.value);

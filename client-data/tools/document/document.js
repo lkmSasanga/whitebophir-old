@@ -1,6 +1,7 @@
 (function documents() { //Code isolation
     var xlinkNS = "http://www.w3.org/1999/xlink";
     const fileTypes = ['jpeg', 'jpg', 'webp', 'png', 'ico', 'svg'];
+    const baseTariffImgCount = 3;
     function preventDefault(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -12,20 +13,23 @@
     Tools.svg.addEventListener('drop', handleDrop, false);
 
     function handleDrop(e) {
-        if (Tools.params.permissions.image) {
-            const data = e.dataTransfer;
-            const file = data.files[0];
-            const fileType = file.name.split('.')[file.name.split('.').length - 1].toLowerCase();
-            if (fileTypes.includes(fileType)) {
-                var reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = workWithImage;
-            } else {
+        if (Tools.imagesLimit === 'infinity' || Tools.imagesCount < Tools.imagesLimit) {
+          const data = e.dataTransfer;
+          const file = data.files[0];
+          const fileType = file.name.split('.')[file.name.split('.').length - 1].toLowerCase();
+          if (fileTypes.includes(fileType)) {
+              var reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = workWithImage;
+          } else {
               createModal(Tools.modalWindows.wrongImageFormat);
-            }
+          }
         } else {
           if (Tools.params.permissions.edit) {
-            createModal(Tools.modalWindows.premiumFunctionForOwner);
+            createModal(Tools.modalWindows.reachedImagesLimit, () => {
+              document.querySelector('.image-limit-desc').innerHTML = 
+                      `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
+            });
           } else {
             createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
           }
@@ -34,35 +38,37 @@
     }
 
     function onstart() {
-        if (Tools.params.permissions.image) {
-            var fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.accept = "image/*";
-            fileInput.style = 'position: fixed; z-index: -100; opacity: 0;'
-            fileInput.multiple = false;
-            document.body.appendChild(fileInput);
-            fileInput.click();
-            fileInput.addEventListener("change", function () {
-                var reader = new FileReader();
-                reader.readAsDataURL(fileInput.files[0]);
-                reader.onload = function (e) {
-                    workWithImage(e);
-                    document.body.removeChild(fileInput);
-                };
+      if (Tools.imagesLimit === 'infinity' || Tools.imagesCount < Tools.imagesLimit) {
+        var fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+        fileInput.style = 'position: fixed; z-index: -100; opacity: 0;'
+        fileInput.multiple = false;
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        fileInput.addEventListener("change", function () {
+            var reader = new FileReader();
+            reader.readAsDataURL(fileInput.files[0]);
+            reader.onload = function (e) {
+                workWithImage(e);
+                document.body.removeChild(fileInput);
+            };
+        });
+      } else {
+        if (Tools.params.permissions.edit) {
+          setTimeout(function () {
+            createModal(Tools.modalWindows.reachedImagesLimit, () => {
+              document.querySelector('.image-limit-desc').innerHTML = 
+                      `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
             });
+          }, 100);
         } else {
-          if (Tools.params.permissions.edit) {
-            setTimeout(function () {
-              createModal(Tools.modalWindows.premiumFunctionForOwner);
-            }, 100);
-          } else {
-            setTimeout(function () {
-              createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
-            }, 100);
-          }
+          setTimeout(function () {
+            createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+          }, 100);
         }
+      }
     }
-
     function workWithImage(e) {
         // use canvas to compress image
         var image = new Image();
@@ -73,7 +79,6 @@
             var scale = 1;
             do {
                 // Todo give feedback of processing effort
-
                 ctx = document.createElement("canvas").getContext("2d");
                 ctx.canvas.width = image.width * scale;
                 ctx.canvas.height = image.height * scale;
@@ -112,6 +117,7 @@
                 x: ((offsetHeight + document.documentElement.clientWidth / 2) / Tools.scale) - width / 2,
                 y: ((document.documentElement.scrollTop + document.documentElement.clientHeight / 2) / Tools.scale) - height / 2,
                 select: true,
+                imagesCount: Tools.imagesCount,
             };
             draw(msg);
             msg.select = false;
@@ -128,6 +134,7 @@
         img.y.baseVal.value = msg['y'];
         img.setAttribute("width", msg.w);
         img.setAttribute("height", msg.h);
+        img.setAttribute('class', 'board-image')
         if (img.transform) {
 	        img.style.transform = msg.transform;
 	        img.style.transformOrigin = msg.transformOrigin;
@@ -137,6 +144,9 @@
             Tools.change("Transform", 1);
             Tools.list.Transform.selectElement(img);
         }
+        // if (msg.imagesCount) {
+        //     Tools.imagesCount = msg.imagesCount;
+        // }
     }
 
     Tools.add({

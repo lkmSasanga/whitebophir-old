@@ -52,6 +52,12 @@ BoardData.prototype.set = function (id, data) {
 	this.addDataToBoard(id, data);
 };
 
+BoardData.prototype.getImagesCount = async function (boardName, data) {
+	let images = await db.getBoardData(boardName, 'doc');
+
+	return images.length;
+};
+
 /** Adds data to the board */
 BoardData.prototype.updateBoard = async function (id, data) {
 	this.validate(data);
@@ -238,7 +244,7 @@ BoardData.prototype.validate = function validate(item, parent) {
 BoardData.load = async function loadBoard(name) {
 	var boardData = new BoardData(name);
 	const boardFromDb = await db.getBoard(name);
-	const boardDataObj = await db.getBoardData(name)
+	const boardDataObj = await db.getBoardData(name);
 
 	boardData.board = boardFromDb ? boardFromDb.board : null;
 	if (!boardData.board) {

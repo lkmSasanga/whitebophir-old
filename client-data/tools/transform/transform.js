@@ -333,13 +333,17 @@
 	function deleteSelectedTargets() {
 		destroyMoveable();
 		destroySelecto();
-		const data = {type: 'array', events: []};
+		const data = { type: 'array', events: [] };
 		targets.forEach(function (target) {
-			data.events.push({type: "delete", id: target.id});
+			if (target.classList.contains('board-image') && Tools.imagesCount !== 'infinity') {
+				data.events.push({ type: 'getImagesCount', id: target.id })
+			} else {
+				data.events.push({ type: "delete", id: target.id });
+			}
 		});
 		data.sendBack = true;
 		Tools.drawAndSend(data, Tools.list.Eraser);
-		Tools.sendAnalytic('Transform', 100)
+		Tools.sendAnalytic('Transform', 100);
 		targets = [];
 	}
 
