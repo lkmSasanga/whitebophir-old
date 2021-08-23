@@ -243,16 +243,6 @@ Tools.boardName = (function () {
 	return decodeURIComponent(path[path.length - 1]);
 })();
 
-Tools.apiToken = (function () {
-	const urlSearchParams = new URLSearchParams(window.location.search);
-	const params = Object.fromEntries(urlSearchParams.entries());
-	if (params.t) {
-		sessionStorage.setItem('token', params.t)
-	}
-
-	return sessionStorage.getItem('token');
-})();
-
 Tools.api = (function () {
 	const urlSearchParams = new URLSearchParams(window.location.search);
 	const params = Object.fromEntries(urlSearchParams.entries());
@@ -261,6 +251,26 @@ Tools.api = (function () {
 	}
 
 	return sessionStorage.getItem('api');
+})();
+
+Tools.apiToken = (function () {
+	const urlSearchParams = new URLSearchParams(window.location.search);
+	const params = Object.fromEntries(urlSearchParams.entries());
+
+	if (params.t) {
+		sessionStorage.setItem('token', params.t)
+		if (Boolean(Number(Tools.api)) === false) {
+			urlSearchParams.delete('t')
+			let url = window.location.origin + window.location.pathname;
+
+			if (urlSearchParams.toString().length > 0) {
+				url = url + '?' + urlSearchParams.toString()
+			}
+			window.location.href = url;
+		}
+	}
+
+	return sessionStorage.getItem('token');
 })();
 
 //Get the board as soon as the page is loaded
