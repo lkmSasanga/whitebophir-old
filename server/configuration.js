@@ -14,6 +14,9 @@ module.exports = {
     /** For development */
     DEV_MODE: parseInt(process.env['DEV_MODE']) || 0,
 
+    /** URL for app */
+    APP_URL: process.env['APP_URL'],
+
     /** URL for PDF */
     PDF_URL: process.env['PDF_URL'],
 
