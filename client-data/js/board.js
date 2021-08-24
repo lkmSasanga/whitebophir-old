@@ -41,8 +41,14 @@ Tools.server_config = JSON.parse(document.getElementById("configuration").text);
 
 document.getElementById('cabinetURL').setAttribute('href', Tools.server_config.CABINET_URL);
 document.getElementById('cabinetURL').addEventListener('click', function () {
-		Tools.sendAnalytic('Cabinet', 0);
+	Tools.sendAnalytic('Cabinet', 0);
 });
+document.addEventListener('keydown',function (e){
+    if (e.shiftKey && e.ctrlKey && e.keyCode === 81) {
+		window.location = Tools.server_config.CABINET_URL
+		Tools.sendAnalytic('Cabinet', 0);
+	}
+})
 
 Tools.board = document.getElementById("board");
 Tools.svg = document.getElementById("canvas");
@@ -463,16 +469,50 @@ function verifyJson(text) {
 	return true;
 }
 
+const toolColorHotkeys = [
+	{
+		keyCode : 48,
+		color : "#FFFFFF"
+	},
+	{
+		keyCode : 49,
+		color : "#000000"
+	},
+	{
+		keyCode : 50,
+		color : "#ff0000"
+	},
+	{
+		keyCode : 51,
+		color : "#FFFF00"
+	},
+	{
+		keyCode : 52,
+		color : "#008000"
+	},
+	{
+		keyCode : 53,
+		color : "#0000ff"
+	},
+	{
+		keyCode : 54,
+		color : "#800080"
+	},
+];
 let pastedElems = false;
 Tools.pasteX = 0;
 Tools.pasteY = (screen.height * Tools.scale) / 2;
-
 
 (function hotkeys() {
 	const presetsList = document.getElementsByClassName('color-preset-box');
 	const sizes = [1, 3, 5, 9, 15];
 	if (!Tools.isMobile()) {
 		document.addEventListener('keydown', function (e) {
+			toolColorHotkeys.forEach((element) => {
+				if ( e.keyCode === element.keyCode) {
+					Tools.setColor(element.color)
+				}
+			})
 			if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 			if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) { //v
 				navigator.clipboard.readText().then((text) => {
@@ -1205,7 +1245,17 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 	document.getElementById('plusScale').addEventListener('click', plusScale, false);
 	document.getElementById("help").addEventListener('click', goToHelp, false);
 	document.getElementById('clearBoard').addEventListener('click', sendClearBoard, false);
+	document.addEventListener('keydown',function (e){
+		if (e.shiftKey && e.ctrlKey && e.keyCode === 69){
+			sendClearBoard()
+		}
+	});
 	document.getElementById('exportToPDF').addEventListener('click', createPdf, false);
+	document.addEventListener('keydown', function (e){
+		if ( e.ctrlKey && e.keyCode === 80){
+			createPdf()
+		}
+	})
 	document.getElementById('exportToPDFButton').addEventListener('click', createPdf, false);
 	document.getElementById('btnCursors').addEventListener('click', toggleCursors, false);
 	document.getElementById('showPDFLines').addEventListener('click', togglePDFLines, false);
@@ -1626,7 +1676,6 @@ Tools.setDrawColor = function (color) {
 
 Tools.setColor = function (color) {
 	Tools.setDrawColor(color);
-
     if (Tools.targets) {
     	Tools.targets.forEach((elem) => {
     		if (elem.tagName === 'foreignObject') {
