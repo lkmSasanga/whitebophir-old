@@ -43,12 +43,6 @@ document.getElementById('cabinetURL').setAttribute('href', Tools.server_config.C
 document.getElementById('cabinetURL').addEventListener('click', function () {
 	Tools.sendAnalytic('Cabinet', 0);
 });
-document.addEventListener('keydown',function (e){
-    if (e.shiftKey && e.ctrlKey && e.keyCode === 81) {
-		window.location = Tools.server_config.CABINET_URL
-		Tools.sendAnalytic('Cabinet', 0);
-	}
-})
 
 Tools.board = document.getElementById("board");
 Tools.svg = document.getElementById("canvas");
@@ -369,6 +363,23 @@ Tools.isMobile = function () {
 	return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
+function sendClearBoard() {
+	createModal(Tools.modalWindows.clearBoard);
+}
+
+function createPdf() {
+	if (Tools.params.permissions.pdf) {
+		Tools.sendAnalytic("Export", 0)
+		window.open(Tools.server_config.PDF_URL + 'generate/' + Tools.boardName + '?name=' + Tools.boardTitle);
+	} else {
+		if (Tools.params.permissions.edit) {
+			createModal(Tools.modalWindows.premiumFunctionForOwner);
+		} else {
+			createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
+		}
+	}
+}
+
 Tools.sendAnalytic = function (toolName, index) {
 	const CODE = 68060329;
 	const Intruments = {
@@ -512,7 +523,27 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 				if ( e.keyCode === element.keyCode) {
 					Tools.setColor(element.color)
 				}
-			})
+			});
+				if (e.shiftKey && e.ctrlKey && e.keyCode === 81) {
+					window.location = Tools.server_config.CABINET_URL
+					Tools.sendAnalytic('Cabinet', 0);
+				}
+				if (e.shiftKey && e.ctrlKey && e.keyCode === 69) {
+					sendClearBoard()
+				}
+				if ( e.ctrlKey && e.keyCode === 80) {
+					createPdf()
+				}
+				if (Tools.curTool.name === 'Pencil' && getToolIndex('Pencil') === 0) {
+					if (e.shiftKey) {
+						Tools.change('Line', getToolIndex('Line'));
+					}
+				}
+			if (Tools.curTool.name === 'Pencil' && getToolIndex('Pencil') === 1) {
+				if (e.shiftKey) {
+					Tools.change('Line', getToolIndex('Line') === 0 ? 4 : getToolIndex('Line') + 1);
+				}
+			}
 			if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 			if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) { //v
 				navigator.clipboard.readText().then((text) => {
@@ -601,6 +632,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 				Tools.change('Hand');
 			}
 		});
+
 		document.addEventListener('keyup', function (e) {
 			if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 			if (e.keyCode === 86 && !e.ctrlKey && !e.metaKey) { //v
@@ -1008,10 +1040,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		scaleToCenter(0.1);
 	}
 
-	function sendClearBoard() {
-		createModal(Tools.modalWindows.clearBoard);
-	}
-
 	function createModalRename() {
 		createModal(Tools.modalWindows.renameBoard, function () {
 			document.getElementById('newBoardName').value = Tools.boardTitle;
@@ -1041,19 +1069,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			}
 		}
 	}
-
-	function createPdf() {
-		if (Tools.params.permissions.pdf) {
-			Tools.sendAnalytic("Export", 0)
-			window.open(Tools.server_config.PDF_URL + 'generate/' + Tools.boardName + '?name=' + Tools.boardTitle);
-		} else {
-			if (Tools.params.permissions.edit) {
-				createModal(Tools.modalWindows.premiumFunctionForOwner);
-			} else {
-				createModal(Tools.modalWindows.premiumFunctionForDefaultUser);
-            }
-        }
-    }
 
     function exportPDFWithoutMobile(e) {
 	    if (document.getElementsByClassName('pdf-menu')[0].contains(e.target)) return;
@@ -1245,17 +1260,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 	document.getElementById('plusScale').addEventListener('click', plusScale, false);
 	document.getElementById("help").addEventListener('click', goToHelp, false);
 	document.getElementById('clearBoard').addEventListener('click', sendClearBoard, false);
-	document.addEventListener('keydown',function (e){
-		if (e.shiftKey && e.ctrlKey && e.keyCode === 69){
-			sendClearBoard()
-		}
-	});
 	document.getElementById('exportToPDF').addEventListener('click', createPdf, false);
-	document.addEventListener('keydown', function (e){
-		if ( e.ctrlKey && e.keyCode === 80){
-			createPdf()
-		}
-	})
 	document.getElementById('exportToPDFButton').addEventListener('click', createPdf, false);
 	document.getElementById('btnCursors').addEventListener('click', toggleCursors, false);
 	document.getElementById('showPDFLines').addEventListener('click', togglePDFLines, false);
