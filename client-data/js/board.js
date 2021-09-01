@@ -128,7 +128,7 @@ Tools.oldTool = null;
 Tools.boardBackgroundColor = null;
 Tools.drawingEvent = true;
 Tools.showMarker = false;
-Tools.showOtherCursors = true;
+Tools.showOtherCursors = false;
 Tools.showMyCursor = false;
 Tools.imagesCount = 0;
 Tools.imagesLimit = 0;
@@ -1013,6 +1013,9 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		if (Tools.params.permissions.cursors) {
 			Tools.sendAnalytic("Cursors", 0);
 			Tools.showMarker = !Tools.showMarker;
+			Tools.send({
+				showOtherCursors: Tools.showMarker
+			}, "Cursor");
 			if (Tools.showMarker === false) {
 				Tools.list.Cursor.clearAll();
 			}
@@ -1106,7 +1109,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		}
 
 		if (Tools.server_config.FEATURES_CURSORS && Tools.params.permissions.cursors) {
-			Tools.showMarker = true;
+			Tools.showMarker = false;
 		}
 		if (Tools.server_config.FEATURES_CURSORS === false) {
 			document.getElementById('btnCursors').remove();
