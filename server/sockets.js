@@ -63,6 +63,7 @@ function socketConnection(socket) {
 
 		var board = await getBoard(name);
 		board.users.add(socket.id);
+		socket.emit('getUsersCount', board.users.size);
 		log('board joined', { 'board': board.name, 'users': board.users.size });
 		return board;
 	}

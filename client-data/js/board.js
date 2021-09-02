@@ -231,6 +231,13 @@ Tools.connect = function () {
 		}
 	});
 
+	this.socket.on('getUsersCount', function (msg) {
+		Tools.send({
+			usersCount: msg
+		}, 'Cursor');
+		Tools.usersCount = msg;
+	});
+
 	this.socket.on("reconnect", function onReconnection() {
 		Tools.socket.emit('joinboard', Tools.boardName);
 	});
@@ -1079,7 +1086,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		}
 
 		if (Tools.server_config.FEATURES_CURSORS && Tools.params.permissions.cursors) {
-			Tools.showMarker = false;
+			Tools.showMarker = true;
 		}
 		if (Tools.server_config.FEATURES_CURSORS === false) {
 			document.getElementById('btnCursors').remove();

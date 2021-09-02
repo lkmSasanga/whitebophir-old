@@ -90,7 +90,9 @@
 		if (!Tools.params.permissions.cursors) return;
 		var cur_time = performance.now();
 		if (cur_time - lastCursorUpdate > MAX_CURSOR_UPDATES_INTERVAL_MS &&
-			(sending && Tools.showOtherCursors)) {
+			(sending && Tools.usersCount > 1)) {
+
+				console.log('999');
 
 			Tools.send(message, "Cursor");
 
@@ -163,6 +165,10 @@
 				if (Tools.isIE) curImg.setAttributeNS(null, "transform", "translate(0 0)");
 				cursorGroup.setAttributeNS(null, "fill", message.color);
 				curImg.setAttributeNS(null, "fill", message.color);
+			}
+			if ('usersCount' in message) {
+				Tools.usersCount = message.usersCount;
+				console.log('update Tools count', Tools.usersCount);
 			}
 			if ('showOtherCursors' in message) {
 				Tools.showOtherCursors = message.showOtherCursors;
