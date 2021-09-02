@@ -92,8 +92,6 @@
 		if (cur_time - lastCursorUpdate > MAX_CURSOR_UPDATES_INTERVAL_MS &&
 			(sending && Tools.usersCount > 1)) {
 
-				console.log('999');
-
 			Tools.send(message, "Cursor");
 
 			lastCursorUpdate = cur_time;
@@ -168,7 +166,6 @@
 			}
 			if ('usersCount' in message) {
 				Tools.usersCount = message.usersCount;
-				console.log('update Tools count', Tools.usersCount);
 			}
 			if ('showOtherCursors' in message) {
 				Tools.showOtherCursors = message.showOtherCursors;
