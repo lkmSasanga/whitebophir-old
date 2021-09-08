@@ -83,6 +83,9 @@
 				shift = evt.shiftKey || localTools[index].shift;
 				evt.preventDefault();
 			}
+			if (Tools.activeShiftLine === true) {
+				shift = false
+			}
 			/*Wait 50ms before adding any point to the currently drawing line.
             This allows the animation to be smother*/
 			if (curLine.id) {
@@ -106,6 +109,7 @@
 
 	function stopLine(x, y) {
 		//Add a last point to the line
+		Tools.activeShiftLine = false
 		if (!cancel) {
 			continueLine(x, y);
 			if (curLine.id) Tools.addActionToHistory({ type: "delete", id: curLine.id })
@@ -114,6 +118,8 @@
 	}
 
 	function draw(data) {
+		Tools.lastLineX = data.x2;
+		Tools.lastLineY = data.y2;
 		switch (data.type) {
 			case "straight":
 				createLine(data);

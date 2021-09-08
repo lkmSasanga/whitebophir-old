@@ -41,6 +41,7 @@
 	}
 
 	function startLine(x, y, evt) {
+		Tools.activePencil = true;
 		//Prevent the press from being interpreted by the browser
 		evt.preventDefault();
 		if (Tools.deleteForTouches(evt, curLineId)) {
@@ -90,6 +91,7 @@
 	}
 
 	function stopLine() {
+		Tools.activePencil = false;
 		if (curLineId) {
 			Tools.addActionToHistory({type: "delete", id: curLineId});
 		}
@@ -108,6 +110,8 @@
 			case "child":
 				if (!elementsWithoutChild[data.parent]) {
 					var line = (renderingLine.id === data.parent) ? renderingLine : svg.getElementById(data.parent);
+					Tools.lastPencilX = data.x;
+					Tools.lastPencilY = data.y;
 					if (!line) {
 						console.error("Pencil: Hmmm... I received a point of a line that has not been created (%s).", data.parent);
 						line = renderingLine = createLine({ "id": data.parent }); //create a new line in order not to loose the points

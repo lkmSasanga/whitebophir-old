@@ -132,6 +132,9 @@ Tools.showOtherCursors = true;
 Tools.showMyCursor = false;
 Tools.imagesCount = 0;
 Tools.imagesLimit = 0;
+Tools.activePencil = false;
+Tools.activeShiftLine = false;
+Tools.activeShiftTool = false;
 
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
@@ -518,7 +521,64 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 	const presetsList = document.getElementsByClassName('color-preset-box');
 	const sizes = [1, 3, 5, 9, 15];
 	if (!Tools.isMobile()) {
+		document.addEventListener('mouseup', function (e){
+			if (Tools.activeShiftTool === true) {
+				if (Tools.curTool.name === 'Line') {
+					if (getToolIndex('Line') === 0) {
+						Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+						Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
+						Tools.change(Tools.oldTool.name);
+						Tools.activeShiftTool = false;
+					}
+				} else if (Tools.curTool.name === 'Pencil') {
+						if (getToolIndex('Pencil') === 0) {
+							Tools.change('Pencil', 0)
+							Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+						}
+					}
+
+			}
+            if (Tools.activeShiftTool === true) {
+				if (Tools.curTool.name === 'Line') {
+					if (getToolIndex('Line') === 4) {
+						Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+						Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
+						Tools.change('Pencil', 1);
+						Tools.activeShiftTool = false;
+					}
+				} else if (Tools.curTool.name === 'Pencil') {
+						if (getToolIndex('Pencil') === 1) {
+							Tools.change('Pencil', 1)
+							Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+						}
+					}
+			}
+		})
 		document.addEventListener('keydown', function (e) {
+				if (Tools.curTool.name === 'Pencil' ) {
+					if (getToolIndex('Pencil') === 0) {
+						if (e.shiftKey) {
+							if (Tools.activePencil === true) {
+								Tools.activeShiftLine = true;
+								Tools.activeShiftTool = true;
+								Tools.change('Line', 0);
+								Tools.list.Line.listeners.press(Tools.lastPencilX, Tools.lastPencilY, e);
+							}
+						}
+					}
+			}
+			if (Tools.curTool.name === 'Pencil' ) {
+				if (getToolIndex('Pencil') === 1) {
+					if (e.shiftKey) {
+						if (Tools.activePencil === true) {
+							Tools.activeShiftLine = true;
+							Tools.activeShiftTool = true;
+							Tools.change('Line', 4);
+							Tools.list.Line.listeners.press(Tools.lastPencilX, Tools.lastPencilY, e);
+						}
+					}
+				}
+			}
 			toolColorHotkeys.forEach((element) => {
 				if ( e.keyCode === element.keyCode) {
 					Tools.setColor(element.color)
@@ -534,16 +594,6 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 				if ( e.ctrlKey && e.keyCode === 80) {
 					createPdf()
 				}
-				if (Tools.curTool.name === 'Pencil' && getToolIndex('Pencil') === 0) {
-					if (e.shiftKey) {
-						Tools.change('Line', getToolIndex('Line'));
-					}
-				}
-			if (Tools.curTool.name === 'Pencil' && getToolIndex('Pencil') === 1) {
-				if (e.shiftKey) {
-					Tools.change('Line', getToolIndex('Line') === 0 ? 4 : getToolIndex('Line') + 1);
-				}
-			}
 			if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 			if (e.keyCode === 86 && (e.ctrlKey || e.metaKey)) { //v
 				navigator.clipboard.readText().then((text) => {
@@ -709,6 +759,16 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 				Tools.undo();
 			} else if (e.keyCode === 32 && e.target == document.body) { // space
 				Tools.change(Tools.oldTool.name);
+			} else if (!e.shiftKey ) {
+				if (Tools.activePencil === true) {
+					if (getToolIndex('Pencil') === 0) {
+						Tools.change('Pencil', getToolIndex('Pencil') === 0 ? 0 : 0);
+						Tools.list.Pencil.listeners.press(Tools.lastLineX, Tools.lastLineY, e);
+					} if (getToolIndex('Pencil') === 1) {
+						Tools.change('Pencil', getToolIndex('Pencil') === 1 ? 1 : 1);
+						Tools.list.Pencil.listeners.press(Tools.lastLineX, Tools.lastLineY, e);
+					}
+				}
 			}
 		}, false);
 	}
@@ -1279,6 +1339,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 			}, "Cursor")
 		}
 	});
+
 
 	window.addEventListener("hashchange", setScrollFromHash, false);
 	window.addEventListener("popstate", setScrollFromHash, false);
