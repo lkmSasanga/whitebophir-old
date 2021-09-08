@@ -44,7 +44,6 @@ var BoardData = function (name) {
 
 /** Adds data to the board */
 BoardData.prototype.set = function (id, data) {
-	console.log('BoardData.prototype.set ', id)
 	//KISS
 	data.time = Date.now();
 	this.validate(data);
@@ -62,13 +61,9 @@ BoardData.prototype.getImagesCount = async function (boardName, data) {
 BoardData.prototype.updateBoard = async function (id, data) {
 	this.validate(data);
 
-	console.log('BoardData.prototype.updateBoard ', id)
 	let board = await db.getBoard(this.name);
-	console.log('BoardData.prototype.updateBoard board', board)
 
 	board.board[id] = data;
-
-	console.log('BoardData.prototype.updateBoard board 2', board)
 
 	db.updateBoard(this.name, board.board);
 };
@@ -79,8 +74,6 @@ BoardData.prototype.updateBoard = async function (id, data) {
  * @returns {boolean} - True if the child was added, else false
  */
 BoardData.prototype.addChild = function (parentId, child) {
-	console.log('BoardData.prototype.addChild', parentId);
-
 	var obj = this.board[parentId];
 	if (typeof obj !== "object") return false;
 	if (Array.isArray(obj._children)) obj._children.push(child);
@@ -88,7 +81,6 @@ BoardData.prototype.addChild = function (parentId, child) {
 
 	this.validate(obj);
 
-	console.log('obj', obj);
 	this.updateBoardData(parentId, obj);
 	return true;
 };
@@ -99,7 +91,6 @@ BoardData.prototype.addChild = function (parentId, child) {
  * @param {boolean} create - True if the object should be created if it's not currently in the DB.
 */
 BoardData.prototype.update = function (id, data, create) {
-	console.log('BoardData.prototype.update', id, data, create)
 	delete data.type;
 	delete data.tool;
 	var obj = this.board[id];
@@ -198,7 +189,6 @@ BoardData.prototype.clean = function cleanBoard() {
 			return (board[x].time | 0) - (board[y].time | 0);
 		}).slice(0, -config.MAX_ITEM_COUNT);
 		for (var i = 0; i < toDestroy.length; i++) delete board[toDestroy[i]];
-		log("cleaned board", { 'removed': toDestroy.length, "board": this.name });
 	}
 }
 

@@ -63,7 +63,6 @@ function socketConnection(socket) {
 
 		var board = await getBoard(name);
 		board.users.add(socket.id);
-		log('board joined', { 'board': board.name, 'users': board.users.size });
 		return board;
 	}
 
@@ -140,7 +139,7 @@ function socketConnection(socket) {
 				var board = await boards[room];
 				board.users.delete(socket.id);
 				var userCount = board.users.size;
-				log('disconnection', { 'board': board.name, 'users': board.users.size });
+				// log('disconnection', { 'board': board.name, 'users': board.users.size });
 				if (userCount === 0) {
 					board.save();
 					delete boards[room];
