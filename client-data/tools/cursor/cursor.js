@@ -90,7 +90,7 @@
 		if (!Tools.params.permissions.cursors) return;
 		var cur_time = performance.now();
 		if (cur_time - lastCursorUpdate > MAX_CURSOR_UPDATES_INTERVAL_MS &&
-			(sending || Tools.curTool.showMarker)) {
+			(sending && Tools.showOtherCursors)) {
 
 			Tools.send(message, "Cursor");
 
@@ -164,7 +164,10 @@
 				cursorGroup.setAttributeNS(null, "fill", message.color);
 				curImg.setAttributeNS(null, "fill", message.color);
 			}
-			if ('showCursor' in message && !message.showCusror) {
+			if ('showOtherCursors' in message) {
+				Tools.showOtherCursors = message.showOtherCursors;
+			}
+			if ('showCursor' in message && !message.showCusror && cursorGroup) {
 				cursorGroup.remove();
 			}
 		}
