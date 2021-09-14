@@ -133,7 +133,7 @@
 
 	function changeHandler(evt) {
 		if (evt) {
-			if (evt.key === 'Enter' && (evt.shiftKey || Tools.isMobile())) {
+			if (evt.key === 'Enter' && (evt.shiftKey || Tools.isMobile()) || evt.key === 'Enter' && (evt.metaKey || Tools.isMobile())) {
 				input.style.top = (curText.y + document.getElementById(curText.id).childNodes[0].clientHeight + Tools.getFontSize() + 5) * Tools.getScale() + 'px';
 			} else if (evt.key === 'Enter') { // enter
 				stopEdit();
