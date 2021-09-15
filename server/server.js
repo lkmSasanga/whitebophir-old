@@ -117,7 +117,7 @@ function handleRequest(request, response) {
 						response.end();
 					} else {
 						// If there is no dot and no directory, parts[1] is the board name
-						log('board opened', { 'board': name });
+						// log('board opened', { 'board': name });
 						boardTemplate.serve(request, response);
 					}
 				});
