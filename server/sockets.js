@@ -19,7 +19,12 @@ function noFail(fn) {
 }
 
 function startIO(app) {
-	io = iolib(app);
+	io = iolib(app, {
+		cors: {
+			origin: "http://whitebophir.test",
+			methods: ["GET", "POST"]
+		}
+	});
 	io.on('connection', noFail(socketConnection));
 	return io;
 }
@@ -169,7 +174,7 @@ async function saveHistoryArray(boardName, message, socket) {
 				socketEventName = "dublicateObjects";
 				data.events.push(board.get(event.id));
 				break;
-			case 'getImagesCount': 
+			case 'getImagesCount':
 				socketEventName = 'getImagesCount';
 				data.events.push(board.get(event.id));
 				board.delete(event.id);
