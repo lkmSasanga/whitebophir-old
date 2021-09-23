@@ -1079,7 +1079,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		}
 
 		if (Tools.server_config.FEATURES_CURSORS && Tools.params.permissions.cursors) {
-			Tools.showMarker = false;
+			Tools.showMarker = true;
 		}
 		if (Tools.server_config.FEATURES_CURSORS === false) {
 			document.getElementById('btnCursors').remove();
