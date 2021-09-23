@@ -914,17 +914,25 @@
 }
 
 @media (max-height:550px) {
-  #Tool-Shapes + .sub-tool-panel, #Tool-Grid + .sub-tool-panel {
-    bottom: 80px;
-  }
+    #Tool-Shapes + .sub-tool-panel, #Tool-Grid + .sub-tool-panel {
+        bottom: 80px;
+    }
 
-  .shapes-panel {
-    top: inherit;
-    bottom: 40px;
-    border-top-right-radius: 10px;
-    border-top-left-radius: 10px;
-    margin-bottom: 20px;
-  }
+    .shapes-panel {
+        top: inherit;
+        bottom: 40px;
+        border-top-right-radius: 10px;
+        border-top-left-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .grid-panel {
+        top: inherit;
+        bottom: 40px;
+        border-top-right-radius: 10px;
+        border-top-left-radius: 10px;
+        margin-bottom: 20px;
+    }
     .text-settings-panel,
     .selected-element-panel{
         top: inherit;
