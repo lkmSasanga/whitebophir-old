@@ -1636,6 +1636,7 @@ Tools.setColor = function (color) {
 				elem.childNodes[0].style.color = color;
 			} else if (elem.tagName === 'g') {
 				elem.childNodes[1].setAttribute('fill', color);
+				elem.childNodes[0].setAttribute("stroke",color)
 			} else if (elem.classList.contains('line-arrow')) {
 				Tools.createMarker(color);
 				elem.style = `marker-end: url(#arrw_${ color.replace('#', '') });`
