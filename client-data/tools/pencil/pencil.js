@@ -94,18 +94,31 @@
 		//Add a last point to the line
 		continueLine(x, y);
 		stopLine();
-		if (Math.abs( startDataX - x) < 3  || Math.abs( startDataY - y) < 3 )  {
-			Tools.drawAndSend({
-				'type': 'PointG',
-				'id': lineElem.id,
-				'x' : pencilData[0].x,
-				'y' : pencilData[0].y,
-				'd' : lineElem.getAttribute('d'),
-				'color': Tools.curTool.name === 'Eraser' ? Tools.getCorrectorColor() : Tools.getColor(),
-				'size': Tools.getSize(),
-				'opacity': (index === 2 && Tools.curTool.name !== 'Eraser') ? 0.5 : 1,
-			}, Tools.list.Pencil);
-		}
+
+			if (Math.abs(startDataX - x) < 3 || Math.abs(startDataY - y) < 3) {
+				if (pencilData.length < 3) {
+					Tools.drawAndSend({
+						'type': 'PointG',
+						'id': lineElem.id,
+						'x': pencilData[0].x,
+						'y': pencilData[0].y,
+						'color': Tools.curTool.name === 'Eraser' ? Tools.getCorrectorColor() : Tools.getColor(),
+						'size': Tools.getSize(),
+						'opacity': (index === 2 && Tools.curTool.name !== 'Eraser') ? 0.5 : 1,
+					}, Tools.list.Pencil);
+				} else {
+					Tools.drawAndSend({
+						'type': 'PointLine',
+						'id': lineElem.id,
+						'x': pencilData[0].x,
+						'y': pencilData[0].y,
+						'd': lineElem.getAttribute('d'),
+						'color': Tools.curTool.name === 'Eraser' ? Tools.getCorrectorColor() : Tools.getColor(),
+						'size': Tools.getSize(),
+						'opacity': (index === 2 && Tools.curTool.name !== 'Eraser') ? 0.5 : 1,
+					}, Tools.list.Pencil);
+				}
+			}
 		pencilData = [];
 	}
 
@@ -129,6 +142,10 @@
 			case "PointG":
 				el = createGPoint(data);
 				renderGPoint(data, el)
+				break;
+			case "PointLine":
+				el = createGPoint(data);
+				renderGLine(data, el)
 				break;
 			case "child":
 				if (!elementsWithoutChild[data.parent]) {
@@ -222,7 +239,6 @@
 		el.setAttribute("stroke", data.color );
 		el.setAttribute("stroke-width", data.size );
 		el.setAttribute("fill", data.color);
-		el.setAttribute("opacity", data.opacity);
 
 		if (data.transform) {
 			el.style.transform = data.transform;
@@ -230,6 +246,21 @@
 		}
 
 		if (!Tools.svg.getElementById(data.id)) Tools.drawingArea.appendChild(el);
+	}
+
+	function renderGLine(data, el) {
+		el.setAttribute("stroke", data.color );
+		el.setAttribute("stroke-width", data.size );
+		el.setAttribute("fill", data.color);
+
+		el.childNodes[0].setAttribute('d',data.d);
+
+		el.childNodes[0].style.transform = data.transform;
+		el.childNodes[0].style.transformOrigin = data.transformOrigin;
+		el.childNodes[1].style.transform = data.transform;
+		el.childNodes[1].style.transformOrigin = data.transformOrigin;
+
+		Tools.drawingArea.appendChild(el);
 	}
 
 	var pencilTool = {
