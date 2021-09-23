@@ -30,7 +30,11 @@
 	var curLineId = "",
 		index = 0,
 		cancel = false,
-		lastTime = performance.now(); //The time at which the last point was drawn
+		lastTime = performance.now(), //The time at which the last point was drawn
+		pencilData = [],
+		lineElem,
+		startDataX,
+		startDataY;
 
 	//The data of the message that will be sent for every new point
 	function PointMessage(x, y) {
@@ -41,6 +45,8 @@
 	}
 
 	function startLine(x, y, evt) {
+		startDataX = x ;
+		startDataY = y ;
 		//Prevent the press from being interpreted by the browser
 		evt.preventDefault();
 		if (Tools.deleteForTouches(evt, curLineId)) {
@@ -78,6 +84,7 @@
 			}
 			if (curLineId !== "" && performance.now() - lastTime > 20) {
 				Tools.drawAndSend(new PointMessage(x, y), Tools.list.Pencil);
+				pencilData.push(new PointMessage(x, y))
 				lastTime = performance.now();
 			}
 		}
@@ -87,6 +94,19 @@
 		//Add a last point to the line
 		continueLine(x, y);
 		stopLine();
+		if (Math.abs( startDataX - x) < 3  || Math.abs( startDataY - y) < 3 )  {
+			Tools.drawAndSend({
+				'type': 'PointG',
+				'id': lineElem.id,
+				'x' : pencilData[0].x,
+				'y' : pencilData[0].y,
+				'd' : lineElem.getAttribute('d'),
+				'color': Tools.curTool.name === 'Eraser' ? Tools.getCorrectorColor() : Tools.getColor(),
+				'size': Tools.getSize(),
+				'opacity': (index === 2 && Tools.curTool.name !== 'Eraser') ? 0.5 : 1,
+			}, Tools.list.Pencil);
+		}
+		pencilData = [];
 	}
 
 	function stopLine() {
@@ -99,11 +119,16 @@
 	var renderingLine = {};
 	var elementsWithoutChild = {};
 	function draw(data) {
+		let el;
 		Tools.drawingEvent = true;
 		switch (data.type) {
 			case "line":
 				renderingLine = createLine(data);
 				pathDataCache[data.id] = "";
+				break;
+			case "PointG":
+				el = createGPoint(data);
+				renderGPoint(data, el)
 				break;
 			case "child":
 				if (!elementsWithoutChild[data.parent]) {
@@ -164,6 +189,7 @@
 			line.style.transformOrigin = lineData.transformOrigin;
 		}
 		Tools.drawingArea.appendChild(line);
+		lineElem = line;
 		return line;
 	}
 
@@ -171,6 +197,40 @@
 		index = +newIndex;
 	}
 
+	function createGPoint(data) {
+		let g =  Tools.createSVGElement("g");
+		g.setAttribute('id', data.id);
+
+		let lineElem = createLine(data);
+		g.innerHTML = '';
+		g.appendChild(lineElem)
+
+		let circle = Tools.createSVGElement('circle');
+		circle.cx.baseVal.value = data.x;
+		circle.cy.baseVal.value = data.y;
+		circle.r.baseVal.value = (data.size * 50) / 100;
+		circle.setAttribute('id', data.id);
+		circle.setAttribute("stroke-width", data.size );
+		circle.setAttribute("stroke", 'transparent' );
+		circle.setAttribute("fill", data.color )
+		g.appendChild(circle);
+
+		return g
+	}
+
+	function renderGPoint(data, el) {
+		el.setAttribute("stroke", data.color );
+		el.setAttribute("stroke-width", data.size );
+		el.setAttribute("fill", data.color);
+		el.setAttribute("opacity", data.opacity);
+
+		if (data.transform) {
+			el.style.transform = data.transform;
+			el.style.transformOrigin = data.transformOrigin;
+		}
+
+		if (!Tools.svg.getElementById(data.id)) Tools.drawingArea.appendChild(el);
+	}
 
 	var pencilTool = {
 		"name": "Pencil",
