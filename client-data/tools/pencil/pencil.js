@@ -41,7 +41,6 @@
 	}
 
 	function startLine(x, y, evt) {
-		Tools.activePencil = true;
 		//Prevent the press from being interpreted by the browser
 		evt.preventDefault();
 		if (Tools.deleteForTouches(evt, curLineId)) {
@@ -66,6 +65,9 @@
 			'dotted': Tools.curTool.name === 'Pencil' ? index === 1 : false,
 		}, Tools.list.Pencil);
 
+		Tools.activeShiftTool = false;
+		Tools.switchLine = true;
+		Tools.activePencil = true;
 		//Immediatly add a point to the line
 		continueLine(x, y);
 	}
@@ -92,6 +94,8 @@
 
 	function stopLine() {
 		Tools.activePencil = false;
+		Tools.activeShiftTool = undefined;
+		Tools.switchLine = false;
 		if (curLineId) {
 			Tools.addActionToHistory({type: "delete", id: curLineId});
 		}

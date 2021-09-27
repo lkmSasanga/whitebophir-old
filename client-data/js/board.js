@@ -134,8 +134,8 @@ Tools.imagesCount = 0;
 Tools.imagesLimit = 0;
 Tools.activePencil = false;
 Tools.activeShiftLine = false;
+Tools.switchLine = false;
 Tools.activeShiftTool = false;
-
 Tools.isIE = /MSIE|Trident/.test(window.navigator.userAgent);
 
 Tools.socket = null;
@@ -190,7 +190,7 @@ Tools.connect = function () {
 			} else if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
 				if (Tools.params.permissions.edit) {
 					createModal(Tools.modalWindows.reachedImagesLimit, () => {
-					  document.querySelector('.image-limit-desc').innerHTML = 
+					  document.querySelector('.image-limit-desc').innerHTML =
 							  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
 					});
 				} else {
@@ -521,60 +521,27 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 	const presetsList = document.getElementsByClassName('color-preset-box');
 	const sizes = [1, 3, 5, 9, 15];
 	if (!Tools.isMobile()) {
-		document.addEventListener('mouseup', function (e){
-			if (Tools.activeShiftTool === true) {
-				if (Tools.curTool.name === 'Line') {
-					if (getToolIndex('Line') === 0) {
-						Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
-						Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
-						Tools.change(Tools.oldTool.name);
-						Tools.activeShiftTool = false;
-					}
-				} else if (Tools.curTool.name === 'Pencil') {
-						if (getToolIndex('Pencil') === 0) {
-							Tools.change('Pencil', 0)
-							Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
-						}
-					}
-
-			}
-            if (Tools.activeShiftTool === true) {
-				if (Tools.curTool.name === 'Line') {
-					if (getToolIndex('Line') === 4) {
-						Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
-						Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
-						Tools.change('Pencil', 1);
-						Tools.activeShiftTool = false;
-					}
-				} else if (Tools.curTool.name === 'Pencil') {
-						if (getToolIndex('Pencil') === 1) {
-							Tools.change('Pencil', 1)
-							Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
-						}
-					}
-			}
-		})
 		document.addEventListener('keydown', function (e) {
-				if (Tools.curTool.name === 'Pencil' ) {
-					if (getToolIndex('Pencil') === 0) {
-						if (e.shiftKey) {
-							if (Tools.activePencil === true) {
-								Tools.activeShiftLine = true;
-								Tools.activeShiftTool = true;
-								Tools.change('Line', 0);
-								Tools.list.Line.listeners.press(Tools.lastPencilX, Tools.lastPencilY, e);
-							}
+			if (Tools.curTool.name === 'Pencil') {
+				if (getToolIndex('Pencil') === 0) {
+					if (e.shiftKey) {
+						if (Tools.activePencil === true) {
+							Tools.activeShiftLine = true;
+							Tools.change('Line', 0);
+							Tools.list.Line.listeners.press(Tools.lastPencilX, Tools.lastPencilY, e);
+							Tools.activePencil = false;
 						}
 					}
+				}
 			}
-			if (Tools.curTool.name === 'Pencil' ) {
+			if (Tools.curTool.name === 'Pencil') {
 				if (getToolIndex('Pencil') === 1) {
 					if (e.shiftKey) {
 						if (Tools.activePencil === true) {
 							Tools.activeShiftLine = true;
-							Tools.activeShiftTool = true;
 							Tools.change('Line', 4);
 							Tools.list.Line.listeners.press(Tools.lastPencilX, Tools.lastPencilY, e);
+							Tools.activePencil = false;
 						}
 					}
 				}
@@ -620,7 +587,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 									} else {
 										if (Tools.params.permissions.edit) {
 											createModal(Tools.modalWindows.reachedImagesLimit, () => {
-												document.querySelector('.image-limit-desc').innerHTML = 
+												document.querySelector('.image-limit-desc').innerHTML =
 														`Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
 											});
 										} else {
@@ -630,7 +597,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 									return;
 								}
 							}
-		
+
 						}).catch(function () {
 							createModal(Tools.modalWindows.errorOnPasteFromClipboard);
 						});
@@ -640,11 +607,11 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 						navigator.clipboard.readText().then(text => {
 							let pasteElems = JSON.parse(text);
 
-							pasteElems.forEach((event) => {		
+							pasteElems.forEach((event) => {
 								if (event.type === 'doc' && Tools.imagesLimit !== 'infinity' && Tools.imagesCount + 1 > Tools.imagesLimit) {
 									if (Tools.params.permissions.edit) {
 										createModal(Tools.modalWindows.reachedImagesLimit, () => {
-										  document.querySelector('.image-limit-desc').innerHTML = 
+										  document.querySelector('.image-limit-desc').innerHTML =
 												  `Вы уже добавили ${Tools.imagesLimit} изображения на доску. Удалите одно из них или смените тариф.`;
 										});
 									} else {
@@ -662,7 +629,7 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 								} else {
 									Tools.pasteX += 10;
 									Tools.pasteY += 10;
-									
+
 									event.transform = `translate(${Tools.pasteX}px, ${Tools.pasteY}px)`;
 									event.transformOrigin = `${Tools.pasteX}px ${Tools.pasteY}px`;
 								}
@@ -758,13 +725,50 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 			} else if (e.keyCode === 90 && e.ctrlKey) {
 				Tools.undo();
 			} else if (e.keyCode === 32 && e.target == document.body) { // space
-				Tools.change(Tools.oldTool.name);
-			} else if (!e.shiftKey ) {
+				Tools.change(Tools.curTool.name);
+			} else if (!e.shiftKey) {
+				if (Tools.curTool.name === 'Line') {
+					if (getToolIndex('Line') === 0) {
+						if (Tools.activeShiftLine === false) {
+							if (Tools.activeShiftTool === false) {
+								Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+								Tools.change('Pencil', getToolIndex('Pencil') === 0 ? 0 : 0);
+								Tools.activeShiftLine = false;
+							}
+						}
+						if (Tools.activeShiftLine === true) {
+							if (Tools.activeShiftTool !== undefined) {
+								Tools.activePencil = true;
+								Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
+								Tools.change('Pencil', getToolIndex('Pencil') === 0 ? 0 : 0);
+								Tools.activeShiftTool = false;
+							}
+						}
+					}
+				}
+				if (Tools.curTool.name === 'Line') {
+					if (getToolIndex('Line') === 4) {
+						if (Tools.activeShiftLine === false) {
+							if (Tools.activeShiftTool === false) {
+								Tools.list.Pencil.listeners.release(Tools.lastPencilX, Tools.lastPencilY);
+								Tools.change('Pencil', getToolIndex('Pencil') === 1 ? 1 : 1);
+								Tools.activeShiftLine = false;
+							}
+						}
+						if (Tools.activeShiftTool !== undefined) {
+							Tools.activePencil = true;
+							Tools.list.Line.listeners.release(Tools.lastLineX, Tools.lastLineY);
+							Tools.change('Pencil', getToolIndex('Pencil') === 1 ? 1 : 1);
+							Tools.activeShiftTool = false;
+						}
+					}
+				}
 				if (Tools.activePencil === true) {
 					if (getToolIndex('Pencil') === 0) {
 						Tools.change('Pencil', getToolIndex('Pencil') === 0 ? 0 : 0);
 						Tools.list.Pencil.listeners.press(Tools.lastLineX, Tools.lastLineY, e);
-					} if (getToolIndex('Pencil') === 1) {
+					}
+					if (getToolIndex('Pencil') === 1) {
 						Tools.change('Pencil', getToolIndex('Pencil') === 1 ? 1 : 1);
 						Tools.list.Pencil.listeners.press(Tools.lastLineX, Tools.lastLineY, e);
 					}
@@ -1153,7 +1157,7 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 
 			if (Tools.params.permissions.image !== 'infinity') {
 				let tooltipLine = `Добавить изображение (i) Доступно ${ Tools.imagesLimit - Tools.imagesCount } из ${Tools.imagesLimit}`;
-	
+
 				document.querySelector('.image-tool').setAttribute('data-tooltip', tooltipLine);
 			}
 		})
@@ -1755,7 +1759,7 @@ Tools.setColor = function (color) {
 				Tools.createMarker(color);
 				elem.style = `marker-end: url(#arrw_${ color.replace('#', '') });`
 			}
-			
+
     		elem.setAttribute('stroke', color);
 		})
 		colorUpdate(Tools.targets);
@@ -1806,7 +1810,7 @@ function watchColorPicker(e) {
 				Tools.createMarker(e.target.value);
 				elem.style = `marker-end: url(#arrw_${ e.target.value.replace('#', '') });`
 			}
-			
+
 			elem.setAttribute('stroke', e.target.value);
 		})
 		colorUpdate(Tools.targets);
