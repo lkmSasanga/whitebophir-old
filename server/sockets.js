@@ -124,7 +124,9 @@ function socketConnection(socket) {
 		}
 
 		// Save the message in the board
-		handleMessage(boardName, data, socket);
+		if (data.tool !== 'Cursor') {
+			handleMessage(boardName, data, socket);
+		}
 
 		let outputData = {};
 		Object.assign(outputData, data, {user: message.user})

@@ -40,6 +40,12 @@ var BoardData = function (name) {
 	this.board = {};
 	this.lastSaveDate = Date.now();
 	this.users = new Set();
+	this.lastUpdateChildDate = Date.now();
+	this.lastChangeDate = Date.now();
+	this.currentParentId = 1;
+	this.lastChangedParentId = 1;
+	this.lastChangedData = {};
+	this.timeout = null;
 };
 
 /** Adds data to the board */
@@ -80,9 +86,26 @@ BoardData.prototype.addChild = function (parentId, child) {
 	else obj._children = [child];
 
 	this.validate(obj);
-
-	this.updateBoardData(parentId, obj);
-	return true;
+	if (this.currentParentId === parentId) {
+		this.lastUpdateChildDate = Date.now();
+		this.lastChangedData = child;
+		this.timeout = setTimeout(() => {
+			let dateDifference = (this.lastUpdateChildDate - this.lastChangeDate)/1000;
+			if (dateDifference >= 2) {
+				this.lastChangeDate = Date.now();
+				this.updateBoardData(parentId, obj)
+				return true;
+			}
+		}, 2000)
+	} else {
+		clearTimeout(this.timeout)
+		this.lastChangeDate = Date.now();
+		this.lastChangedParentId = this.currentParentId;
+		this.currentParentId = parentId;
+		if (Object.keys(this.lastChangedData).length !== 0) {
+			this.updateBoardData(parentId, this.lastChangedData);
+		}
+	}
 };
 
 /** Update the data in the board
