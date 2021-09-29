@@ -241,8 +241,12 @@ async function saveHistory(boardName, message, socket) {
 			board.updateBoard(board.name, message);
 			break;
 		default: //Add data
-			if (!id) throw new Error("Invalid message: ", message);
-			board.set(id, message);
+			// if (!id) throw new Error("Invalid message: ", message);
+			// board.set(id, message);
+
+			if (id) {
+				board.set(id, message);
+			}
 	}
 }
 
