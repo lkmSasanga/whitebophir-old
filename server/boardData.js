@@ -42,10 +42,12 @@ var BoardData = function (name) {
 	this.users = new Set();
 	this.lastUpdateChildDate = Date.now();
 	this.lastChangeDate = Date.now();
-	this.currentParentId = 1;
-	this.lastChangedParentId = 1;
-	this.lastChangedData = {};
+	this.currentParentId = 0;
+	this.lastChangedParentId = 0;
+	this.lastChangedData = [];
 	this.timeout = null;
+	this.changeCurrentElement = true;
+	this.lastAddedElementData = [];
 };
 
 /** Adds data to the board */
@@ -84,28 +86,8 @@ BoardData.prototype.addChild = function (parentId, child) {
 	if (typeof obj !== "object") return false;
 	if (Array.isArray(obj._children)) obj._children.push(child);
 	else obj._children = [child];
-
 	this.validate(obj);
-	if (this.currentParentId === parentId) {
-		this.lastUpdateChildDate = Date.now();
-		this.lastChangedData = child;
-		this.timeout = setTimeout(() => {
-			let dateDifference = (this.lastUpdateChildDate - this.lastChangeDate)/1000;
-			if (dateDifference >= 2) {
-				this.lastChangeDate = Date.now();
-				this.updateBoardData(parentId, obj)
-				return true;
-			}
-		}, 2000)
-	} else {
-		clearTimeout(this.timeout)
-		this.lastChangeDate = Date.now();
-		this.lastChangedParentId = this.currentParentId;
-		this.currentParentId = parentId;
-		if (Object.keys(this.lastChangedData).length !== 0) {
-			this.updateBoardData(parentId, this.lastChangedData);
-		}
-	}
+	this.saveBoardData(parentId, obj)
 };
 
 /** Update the data in the board
@@ -126,8 +108,10 @@ BoardData.prototype.update = function (id, data, create) {
 	if (create || obj === undefined) {
 		this.board[id] = data;
 		this.addDataToBoard(id, data);
-	} else {
+	} else if(data.transform) {
 		this.updateBoardData(id, obj);
+	} else {
+		this.saveBoardData(id, obj)
 	}
 };
 
@@ -170,6 +154,42 @@ BoardData.prototype.addUser = function addUser(userId) {
 }
 
 /**
+ * @param {string} parentId - Identifier of the parent element.
+ * @param {object} obj - Object containing the the values to update.
+ * @returns {boolean}
+ */
+BoardData.prototype.saveBoardData = function(parentId, obj) {
+	if (this.currentParentId === parentId) {
+		this.lastUpdateChildDate = Date.now();
+		this.lastChangedData[this.name] = obj;
+		let dateDifference = (this.lastUpdateChildDate - this.lastChangeDate)/1000;
+		if (dateDifference >= 2) {
+			this.lastChangeDate = Date.now();
+			this.updateBoardData(parentId, obj)
+			return true;
+		}
+		this.timeout = setTimeout(() => {
+			let dateDifference = (Date.now() - this.lastUpdateChildDate)/1000;
+			if (dateDifference >= 2) {
+				this.updateBoardData(this.lastChangedData[this.name].id, this.lastChangedData[this.name])
+				return true;
+			}
+		}, 2000)
+	} else {
+		if (this.timeout !== null) {
+			clearTimeout(this.timeout);
+		}
+		this.changeCurrentElement = true;
+		this.lastChangeDate = Date.now();
+		this.lastChangedParentId = this.currentParentId;
+		this.currentParentId = parentId;
+		if (!this.lastChangedData.length) {
+			this.updateBoardData(this.lastChangedParentId, this.lastChangedData[this.name]);
+		}
+	}
+}
+
+/**
  * This callback is displayed as part of the BoardData class.
  * Describes a function that processes data that comes from the board
  * @callback BoardData~processData
@@ -200,6 +220,7 @@ BoardData.prototype.addDataToBoard = async function (id, data) {
 
 /** Saves the data in the board to a mongodb. */
 BoardData.prototype.updateBoardData = async function (id, data) {
+	console.log('_____')
 	db.updateBoardData(this.name, id, data);
 };
 
