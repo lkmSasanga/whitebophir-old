@@ -289,6 +289,7 @@
 	}
 
 	function dublicateObjects() {
+		targets = targets.filter(elem => elem.tagName !== 'image');
 		const dataForUndo = {type: 'array', events: []};
 		const events = targets.map(function(item) {
 			dataForUndo.events.push({type: "delete", id: item.id});
@@ -301,6 +302,7 @@
 	}
 
 	function copyObjects() {
+		targets = targets.filter(elem => elem.tagName !== 'image');
 		if (targets) {
 			let events = targets.map((elem) => {
 				return {
