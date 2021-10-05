@@ -1,0 +1,154 @@
+.library-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.library-row {
+	display: none;
+}
+
+.library-inner {
+	min-width: 772px;
+	min-height: 461px;
+	background: #FFFFFF;
+	box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.05);
+	border-radius: 20px !important;
+    padding: 17px 25px 0 14px !important;
+}
+
+.library-title {
+	max-width: 100%;
+	height: 64px;
+}
+
+.library-title-template {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	position: relative;
+}
+
+.close-library {
+	right: 11px !important;
+    top: 11px !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: #F2F2F2;
+}
+
+.library-title-template div{
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 16px;
+	line-height: 20px;
+	text-align: center;
+	color: #000000;
+}
+
+.library-title-geometry {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 14px;
+	line-height: 17px;
+	color: #000000;
+}
+
+.geometry-algebra {
+	position: relative;
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 12px;
+	line-height: 15px;
+	cursor: pointer;
+}
+
+.list-items {
+	width: 161px;
+	min-height: 380px;
+    border-right: 1px solid #F2F2F2;
+}
+
+.list-items span {
+	position: absolute;
+	cursor: pointer;
+	margin-left: 5px;
+}
+
+.list-items ul li:first-child {
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 12px;
+	line-height: 15px;
+	color: #000000;
+	cursor: pointer;
+}
+
+.list-items ul li:nth-child(2n + 2) {
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 12px;
+	line-height: 15px;
+	color: #828282;
+	cursor:pointer;
+}
+
+.list-items .school-subjects {
+	font-family: Montserrat;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 12px;
+	line-height: 15px;
+	text-decoration-line: underline;
+	color: #828282;
+	cursor: pointer;
+    margin-bottom: 5px;
+}
+
+.list-items .subject-list {
+    margin-bottom: 0;
+}
+
+.list-items .active {
+	color: #000000;
+}
+
+.library-items {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.template-figures {
+	display: flex;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	width: 611px;
+	height: 380px;
+}
+
+.template-figure {
+	width: 110px;
+	height: 110px;
+	margin-left: 42px;
+	cursor: pointer;
+}
+
+.template-figure:hover {
+    border-radius: 20px;
+	background-color: #F2F2F2;
+}

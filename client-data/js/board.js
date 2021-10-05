@@ -449,6 +449,9 @@ Tools.sendAnalytic = function (toolName, index) {
 		"Cursors": {
 			"0": "show_cursor",
 		},
+		"Template": {
+			"0": "templates",
+		},
 	};
 	//console.log(CODE,'reachGoal', Intruments[toolName][index])
 	ym(CODE, 'reachGoal', Intruments[toolName][index]);
@@ -559,6 +562,8 @@ Tools.pasteY = (screen.height * Tools.scale) / 2;
 			} else if (e.keyCode === 32) {
 				e.preventDefault();
 				Tools.change('Hand');
+			} else if (e.keyCode === 83) { // s
+				openTemplatesModal();
 			}
 		});
 		document.addEventListener('keyup', function (e) {
