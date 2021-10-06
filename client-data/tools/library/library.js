@@ -1,4 +1,4 @@
-const xlinkNS = "http://www.w3.org/1999/xlink";
+const xlinkNS = 'http://www.w3.org/1999/xlink';
 const templateTool = document.querySelector('.template-tool');
 const templateInner = document.querySelector('#library-block');
 const subjectsList = document.querySelector('.list-items');
