@@ -1110,21 +1110,6 @@ function createModal(htmlContent, functionAfterCreate, functionAfterClose) {
 		b.forEach((el) => {
 			el.classList.toggle('sjx-hidden');
 		});
-		//interval for send activity board
-		setInterval((function () {
-			var lastPosX = Tools.mousePosition.x;
-			var lastPosY = Tools.mousePosition.y;
-			return function () {
-				if (lastPosX !== Tools.mousePosition.x || lastPosY !== Tools.mousePosition.y) {
-					fetch(Tools.server_config.API_URL + `boards/${Tools.boardName}/activity`, {
-						credentials: "include",
-						mode: 'no-cors',
-					});
-				}
-				lastPosX = Tools.mousePosition.x;
-				lastPosY = Tools.mousePosition.y;
-			}
-		})(), 30000);
 
 		document.getElementById("preloader").classList.remove('dont-hide');
 	}
