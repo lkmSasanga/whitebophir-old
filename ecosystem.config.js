@@ -4,8 +4,8 @@ module.exports = {
     script: 'server/server.js',
     ignore_watch: 'node_modules',
     wait_ready: true,
-    max_memory_restart: '15G',
-    "autorestart" : false,
-    "node_args":["--max-old-space-size=18392"]
+    max_memory_restart: '30G',
+    "autorestart" : true,
+    "node_args":["--max-old-space-size=32392"]
   }],
 };
