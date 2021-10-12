@@ -28,19 +28,24 @@
 	var targetID = '';
 	var index = 0;
 	var erasing = false;
+	var erasingEvent = false;
 	var colorForUpdate = '#fff';
 
 	function press(x, y, evt) {
+		erasingEvent = true;
 		if (index === 0) return startErasing(x, y, evt);
 		Tools.list.Pencil.listeners.press(x, y, evt);
 	}
 
 	function move(x, y, evt) {
-		if (index === 0) return erase(x, y, evt);
-		Tools.list.Pencil.listeners.move(x, y, evt);
+		if (erasingEvent === true) {
+			if (index === 0) return erase(x, y, evt);
+			Tools.list.Pencil.listeners.move(x, y, evt);
+		}
 	}
 
 	function release(x, y) {
+		erasingEvent = false;
 		if (index === 0) stopErasing();
 		Tools.list.Pencil.listeners.release(x, y);
 	}
@@ -53,8 +58,8 @@
 
 	function generateCoordinates(x, y, r) {
 		const array = [];
-		for (var i = x - r; i <= x + r; i++) {
-			for (var k = y - r; k <= y + r; k++) {
+		for (var i = x - r - 22; i <= x + r ; i++) {
+			for (var k = y - r + 22; k <= y + r ; k++) {
 				array.push([i, k]);
 			}
 		}
@@ -89,7 +94,7 @@
 			document.getElementById(targetID).classList.remove('forErasing');
 		}
 		if (checkElementIsDraw(target)) {
-      targetID = target.id;
+			targetID = target.id;
 			msg.id = targetID;
 			if (erasing && target.tagName !== 'image' && !target.classList.contains('selectedEl')) {
 				if (msg.id) Tools.drawAndSend(msg);
