@@ -81,6 +81,15 @@ async function getBoard(boardName) {
     return result;
 }
 
+async function getBoardItem(boardName, id) {
+    const collection = db.collection('boardData');
+    const item = await collection.findOne({ name: boardName, id: id});
+    if (item && item.data) {
+        return item.data
+    }
+    return item;
+}
+
 /** Получает доску по имени, если такой доски не существует возвращает null **/
 async function getBoardData(boardName, type = null) {
     const collection = db.collection('boardData');
@@ -125,4 +134,5 @@ module.exports = {
     getBoardData,
     deleteBoardData,
     deleteAllBoardData,
+    getBoardItem
 };

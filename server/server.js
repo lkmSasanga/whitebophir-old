@@ -15,6 +15,7 @@ var app = require('http').createServer(handler)
 	, db = require('./db/db.js')
 	, Sentry = require("@sentry/node")
 	, Tracing = require("@sentry/tracing");
+const {BoardData} = require("./boardData");
 
 var MIN_NODE_VERSION = 8.0;
 
@@ -81,7 +82,7 @@ function validateBoardName(boardName) {
 	throw new Error("Illegal board name: " + boardName);
 }
 
-function handleRequest(request, response) {
+async function handleRequest(request, response) {
 	var parsedUrl = url.parse(request.url, true);
 	var parts = parsedUrl.pathname.split('/');
 	if (parts[0] === '') parts.shift();
@@ -89,7 +90,7 @@ function handleRequest(request, response) {
 	switch (parts[0]) {
 		case 'getImagesCount':
 			bd.BoardData.prototype.getImagesCount(parts[1]).then(res => {
-				response.writeHead(200, { 'Content-Type': 'application/json' });
+				response.writeHead(200, {'Content-Type': 'application/json'});
 				response.write(JSON.stringify(res));
 				response.end();
 			})
@@ -193,9 +194,15 @@ function handleRequest(request, response) {
 			});
 			break;
 
+		case "getBoard":
+			let boardData = await BoardData.load(parts[1]);
+			response.writeHead(200, {'Content-Type': 'application/json'});
+			response.write(JSON.stringify({_children: boardData.getAll()}));
+			response.end();
+			break;
 		case "": // Index page
 			logRequest(request);
-			response.writeHead(301, { 'Location': config.CABINET_URL });
+			response.writeHead(301, {'Location': config.CABINET_URL});
 			response.end();
 			break;
 

@@ -23,6 +23,7 @@
  *
  * @licend
  * @module boardData
+ * @deprecated
  */
 
 var log = require("./log.js").log
@@ -80,9 +81,14 @@ BoardData.prototype.addChild = function (parentId, child) {
 	else obj._children = [child];
 
 	this.validate(obj);
+<<<<<<< Updated upstream
 
 	this.updateBoardData(parentId, obj);
 	return true;
+=======
+	//this.saveBoardData(parentId, obj)
+	this.updateBoardData(parentId, obj)
+>>>>>>> Stashed changes
 };
 
 /** Update the data in the board
@@ -94,6 +100,7 @@ BoardData.prototype.update = function (id, data, create) {
 	delete data.type;
 	delete data.tool;
 	var obj = this.board[id];
+
 	if (typeof obj === "object") {
 		for (var i in data) {
 			obj[i] = data[i];
@@ -103,7 +110,11 @@ BoardData.prototype.update = function (id, data, create) {
 	if (create || obj === undefined) {
 		this.board[id] = data;
 		this.addDataToBoard(id, data);
+<<<<<<< Updated upstream
 	} else {
+=======
+	} else{
+>>>>>>> Stashed changes
 		this.updateBoardData(id, obj);
 	}
 };
@@ -122,6 +133,7 @@ BoardData.prototype.delete = function (id) {
  * @returns {object} The element with the given id, or undefined if no element has this id
  */
 BoardData.prototype.get = function (id, children) {
+	return this.board[id];
 	return this.board[id];
 };
 
@@ -147,6 +159,45 @@ BoardData.prototype.addUser = function addUser(userId) {
 }
 
 /**
+<<<<<<< Updated upstream
+=======
+ * @param {string} parentId - Identifier of the parent element.
+ * @param {object} obj - Object containing the the values to update.
+ * @returns {boolean}
+ */
+// BoardData.prototype.saveBoardData = function(parentId, obj) {
+// 	if (this.currentParentId === parentId) {
+// 		this.lastUpdateChildDate = Date.now();
+// 		this.lastChangedData[this.name] = obj;
+// 		let dateDifference = (this.lastUpdateChildDate - this.lastChangeDate)/1000;
+// 		if (dateDifference >= 2) {
+// 			this.lastChangeDate = Date.now();
+// 			this.updateBoardData(parentId, obj)
+// 			return true;
+// 		}
+// 		this.timeout = setTimeout(() => {
+// 			let dateDifference = (Date.now() - this.lastUpdateChildDate)/1000;
+// 			if (dateDifference >= 2) {
+// 				this.updateBoardData(this.lastChangedData[this.name].id, this.lastChangedData[this.name])
+// 				return true;
+// 			}
+// 		}, 2000)
+// 	} else {
+// 		if (this.timeout !== null) {
+// 			clearTimeout(this.timeout);
+// 		}
+// 		this.changeCurrentElement = true;
+// 		this.lastChangeDate = Date.now();
+// 		this.lastChangedParentId = this.currentParentId;
+// 		this.currentParentId = parentId;
+// 		if (!this.lastChangedData.length) {
+// 			this.updateBoardData(this.lastChangedParentId, this.lastChangedData[this.name]);
+// 		}
+// 	}
+// }
+
+/**
+>>>>>>> Stashed changes
  * This callback is displayed as part of the BoardData class.
  * Describes a function that processes data that comes from the board
  * @callback BoardData~processData
@@ -176,8 +227,13 @@ BoardData.prototype.addDataToBoard = async function (id, data) {
 };
 
 /** Saves the data in the board to a mongodb. */
+<<<<<<< Updated upstream
 BoardData.prototype.updateBoardData = async function (id, data) {
 	db.updateBoardData(this.name, id, data);
+=======
+BoardData.prototype.updateBoardData = async function (boardName ,id, data) {
+	db.updateBoardData(boardName, id, data);
+>>>>>>> Stashed changes
 };
 
 /** Remove old elements from the board */

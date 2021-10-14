@@ -239,12 +239,41 @@ Tools.connect = function () {
 Tools.connect();
 
 Tools.boardName = (function () {
-	var path = window.location.pathname.split("/");
+	let path = window.location.pathname.split("/");
 	return decodeURIComponent(path[path.length - 1]);
 })();
 
-//Get the board as soon as the page is loaded
-Tools.socket.emit("getboard", Tools.boardName);
+Tools.boardUrl = (function () {
+	let path = window.location.pathname.split("/");
+	return path[0]+"/getBoard/"+Tools.boardName;
+})()
+
+getBoard(Tools.boardUrl)
+	.then((data) => {
+		const preloaderEl = document.getElementById("preloader");
+		handleMessage(data).finally(function afterload() {
+			if (!preloaderEl.classList.contains('hide')) {
+				preloaderEl.classList.add("hide");
+				setTimeout(Tools.setScrollFromHash, 1000);
+				setTimeout(function () {
+					Tools.socket.emit('getSelectedElements', Tools.boardName);
+				}, 300);
+			}
+		});
+	});
+async function getBoard(url = '') {
+	const response = await fetch(url, {
+		method: 'GET',
+		mode: 'no-cors',
+		cache: 'no-cache',
+		credentials: 'same-origin',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		referrerPolicy: 'no-referrer',
+	});
+	return await response.json();
+}
 
 Tools.HTML = {
 	addTool: function (toolName) {
@@ -824,7 +853,6 @@ function batchCall(fn, args) {
 function handleMessage(message) {
 	//Check if the message is in the expected format
 	if (!message.tool && !message._children) {
-		console.error("Received a badly formatted message (no tool). ", message);
 	}
 	if (message.tool) messageForTool(message);
 	if (message._children) return batchCall(handleMessage, message._children);

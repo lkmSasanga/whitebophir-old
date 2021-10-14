@@ -2,11 +2,14 @@ var iolib = require('socket.io')
 	, log = require("./log.js").log
 	, BoardData = require("./boardData.js").BoardData
 	, config = require("./configuration");
+const db = require("./db/db.js");
+const {BoardService} = require("./boardService");
 
 /** Map from name to *promises* of BoardData
 	@type {Object<string, Promise<BoardData>>}
 */
 var boards = {};
+var boardService = new BoardService();
 
 function noFail(fn) {
 	return function noFailWrapped(arg) {
@@ -56,25 +59,25 @@ async function getBoard(name) {
 }
 
 function socketConnection(socket) {
-
+//Todo check is join can be did from frontend
 	async function joinBoard(name) {
 		// Join the board
 		socket.join(name);
 
-		var board = await getBoard(name);
-		board.users.add(socket.id);
-		return board;
+		// var board = await getBoard(name);
+		// board.users.add(socket.id);
+		// return board;
 	}
 
 	socket.on("error", noFail(function onError(error) {
 		log("ERROR", error);
 	}));
 
-	socket.on("getboard", async function onGetBoard(name) {
-		var board = await joinBoard(name);
-		//Send all the board's data as soon as it's loaded
-		socket.emit("broadcast", { _children: board.getAll() });
-	});
+	// socket.on("getboard", async function onGetBoard(name) {
+	// 	var board = await joinBoard(name);
+	// 	//Send all the board's data as soon as it's loaded
+	// 	socket.emit("broadcast", { _children: board.getAll() });
+	// });
 
 	socket.on("joinboard", noFail(joinBoard));
 
@@ -122,12 +125,20 @@ function socketConnection(socket) {
 			log('BLOCKED MESSAGE', message.data);
 			return;
 		}
+		let emitData = {...data};
 
+<<<<<<< Updated upstream
 		// Save the message in the board
 		handleMessage(boardName, data, socket);
 
+=======
+		if (data.tool !== 'Cursor') {
+			await handleMessage(boardName, data, socket);
+		}
+		// Save the message in the board
+>>>>>>> Stashed changes
 		let outputData = {};
-		Object.assign(outputData, data, {user: message.user})
+		Object.assign(outputData, emitData, {user: message.user})
 		//Send data to all other users connected on the same board
 		socket.broadcast.to(boardName).emit('broadcast', outputData);
 		delete outputData;
@@ -141,7 +152,7 @@ function socketConnection(socket) {
 				var userCount = board.users.size;
 				// log('disconnection', { 'board': board.name, 'users': board.users.size });
 				if (userCount === 0) {
-					board.save();
+					// board.save();
 					delete boards[room];
 				}
 			}
@@ -151,31 +162,30 @@ function socketConnection(socket) {
 
 async function handleMessage(boardName, message, socket) {
 	if (message.type === 'array') {
-		saveHistoryArray(boardName, message, socket);
+		return saveHistoryArray(boardName, message, socket);
 	} else {
-		saveHistory(boardName, message, socket);
+		return saveHistory(boardName, message, socket);
 	}
-
 }
-
 async function saveHistoryArray(boardName, message, socket) {
-	var board = await getBoard(boardName);
-	const data = { type: 'array', events: [] };
+	const data = {type: 'array', events: []};
 	var socketEventName;
-	message.events.map(event => {
+	for (let key in message.events) {
+		let event = message.events[key];
 		switch (event.type) {
 			case "dublicate":
-				socketEventName = "dublicateObjects";
-				data.events.push(board.get(event.id));
+				socketEventName = "dublicateObjects"
+				let d = await boardService.getItemFromDb(boardName, event.id);
+				data.events.push(d);
 				break;
-			case 'getImagesCount': 
-				socketEventName = 'getImagesCount';
-				data.events.push(board.get(event.id));
-				board.delete(event.id);
-				break;
+			case 'getImagesCount':
+				 socketEventName = 'getImagesCount';
+				 data.events.push(await boardService.getItemFromDb(boardName, event.id));
+				 db.deleteBoardData(boardName, event.id);
+				 break;
 			case 'copy':
 				socketEventName = 'copyObjects';
-				data.events.push(board.get(event.id));
+				data.events.push(await boardService.getItemFromDb(boardName, event.id));
 				break;
 			case "delete":
 				if (event.id) {
@@ -184,66 +194,64 @@ async function saveHistoryArray(boardName, message, socket) {
 					} else if (message.sendBack && message.sendToRedo) {
 						socketEventName = "addActionToHistoryRedo";
 					}
-					data.events.push(board.get(event.id));
-					board.delete(event.id);
-				};
+					data.events.push(await boardService.getItemFromDb(boardName, event.id));
+					db.deleteBoardData(boardName, event.id);
+				}
 				break;
 			case "update":
-				if (event.id) board.update(event.id, event);
+				await boardService.updateBoard(boardName, event.id, event);
 				break;
 		}
-	});
+	}
 	if (socketEventName) {
-		socket.emit(socketEventName, data);
+		setTimeout(()=> {
+			socket.emit(socketEventName, data);
+		}, 1)
 	}
 }
 
 async function saveHistory(boardName, message, socket) {
 	var id = message.id;
-	var board = await getBoard(boardName);
 	switch (message.type) {
 		case "dublicate":
-			socket.emit("dublicateObject", board.get(id));
+			socket.emit("dublicateObject", message);
 			break;
 		case 'doc':
-			board.getImagesCount(boardName).then(res => {
+			boardService.getImagesCount(boardName).then(res => {
 				socket.emit("getImagesCount", res + 1);
 			});
-			board.set(id, message);
+			boardService.setData(boardName, id, message);
 			break;
 		case "delete":
 			if (id) {
 				if (message.sendBack && !message.sendToRedo) {
-					socket.emit("addActionToHistory", board.get(id));
+					socket.emit("addActionToHistory", message);
 				} else if (message.sendBack && message.sendToRedo) {
-					socket.emit("addActionToHistoryRedo", board.get(id));
+					socket.emit("addActionToHistoryRedo", message);
 				}
-				board.delete(id);
-			};
+				db.deleteBoardData(boardName, id);
+			}
 			break;
 		case "update":
-			if (id) board.update(id, message);
+			if (id) boardService.updateBoardData(boardName, id, message);
 			break;
 		case "child":
-			board.addChild(message.parent, message);
+			boardService.addChild(boardName, message.parent, message);
 			break;
 		case "clearBoard":
-			if (boards[board.name]) {
-				boards[board.name].board = {};
-			}
-			board.clearAll();
-			socket.broadcast.to(board.name).emit('clearBoard');
+			boardService.clearAll(boardName);
+			socket.broadcast.to(boardName).emit('clearBoard');
 			socket.emit('getImagesCount', message.imagesCount);
 			break;
 		case "background":
-			board.updateBoard(board.name, message);
+			boardService.updateBoardBackground(boardName, message);
 			break;
 		default: //Add data
 			// if (!id) throw new Error("Invalid message: ", message);
 			// board.set(id, message);
 
 			if (id) {
-				board.set(id, message);
+				boardService.setItem(boardName, id, message);
 			}
 	}
 }
